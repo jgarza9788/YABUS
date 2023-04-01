@@ -5,22 +5,13 @@ from logging import Logger
 
 class DataManager():
     def __init__(self,
-                file: str = None,
-                root: str = None,
+                file_dir: str = None,
                 logger:Logger = None,
                 default=[]
                 ):
         self.default = default
 
-        if root == None:
-            root = os.path.dirname(os.path.realpath(__file__))
-        self.root = root
-
-
-        if file == None:
-            self.file = os.path.join(root,'data.json')
-        else:
-            self.file = os.path.join(root,file)
+        self.file_dir = file_dir
         
         self.logger = logger
         if self.logger == None:
@@ -33,7 +24,7 @@ class DataManager():
     def load(self):
         self.logger.info('loading Json data')
         try:
-            with open(self.file,'r') as file:
+            with open(self.file_dir,'r') as file:
                 return json.load(file)
         except:
             self.logger.error('error, while loading json file')
@@ -42,6 +33,6 @@ class DataManager():
             return self.data
 
     def save(self):
-        with open(self.file,'w') as file:
+        with open(self.file_dir,'w') as file:
             file.write(json.dumps(self.data,indent=4))
-            self.logger.info(f'saved file {self.file}')
+            self.logger.info(f'saved file {self.file_dir}')
