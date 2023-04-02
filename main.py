@@ -19,7 +19,11 @@ pd.set_option('display.width', None)
 
 
 class YABUS():
-    def __init__(self,config_dir:str = None,verbose:bool = False):
+    def __init__(self,
+                config_dir:str = None,
+                save_cache_as_scv:bool = False,
+                verbose:bool = False
+                ):
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
         self.logger = createLogger(
@@ -27,31 +31,50 @@ class YABUS():
             useStreamHandler=self.verbose
             )
         
+        # print(self.logger.dir)
+        # print(self.logger.filename)
+        self.logger.info(self.logger.filename)
+        
         self.config_dir = config_dir
         if self.config_dir == None or self.config_dir == '':
             self.config_dir = os.path.join(self.dir,'config.json')
 
-        self.default_config_item = [
-            {
-            'source': 'X:\\',
-            'root_dest': 'Y:\\',
-            'options': '',
-            'ex_reg':r'',
-            'lastbackup': None,
-            'enable': True, 
-            'runable': True
-            }
-        ]
+        self.default_config_item = {
+            "items": [
+                {
+                'source': 'X:\\',
+                'root_dest': 'Y:\\',
+                'options': '',
+                'ex_reg':r'',
+                'lastbackup': None,
+                'enable': True, 
+                'runable': True
+                }
+            ]
+        }
 
         self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config_item.copy())
+
+        
         self.process_config()
 
-        self.scan_cache = []
+        self.scan_cache = pd.DataFrame()
+        self.save_cache_as_csv = save_cache_as_scv
+
+    def items(self):
+        """returns a list of items that should be synced
+
+        Returns:
+            _type_: _description_
+        """
+        return self.config.data['items']
 
     def process_config(self):
+        """makes sure the config file is good
+        """
         self.logger.info('start')
 
-        for item in self.config.data:
+        for item in self.items():
             self.logger.info(item)
 
             item['options'] = item.get('options','') 
@@ -98,11 +121,13 @@ class YABUS():
         self.config.save()
         self.logger.info('done')
 
-    def bar(self,num:int,den:int,size:int = 75):
-        p = (num+1)/den 
+    def bar(self,num:int,den:int,size:int=75):
+        """makes a load bar"""
+        p = (num)/den 
         return '[' + ('#'*(int(p * size))).ljust(size,'-') + ']'
 
-    def scan_folder(self,root:str):
+    def __scan_folder(self,root:str):
+        """scans a folder and returns a dataframe for all the files"""
         rootnum_minus_one = len(root.split('\\')) 
         result = []
         for dirpath, dirnames, filenames in os.walk(root):
@@ -133,25 +158,35 @@ class YABUS():
         # print()
         return pd.DataFrame(result)
 
-    def return_df(self,root:str):
-        return pd.DataFrame() 
+    def _return_df(self,root:str == None):
+        """returns a blank pd.DataFrame()
+
+        Args:
+            root (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        return pd.DataFrame()
 
     def scan(self):
+        """prepares the scan_cache (a dataframe for all the files/folders that needs to be archived/backedup)
+        """
         print('Scanning Start ...')
         self.logger.info('start')
         self.logger.info('scan_cache - cleared')
-        self.scan_cache = []
+        self.scan_cache = pd.DataFrame()
 
         executor = ThreadPoolExecutor(4)
         futures = []
         futures_map_source = {}
         futures_map_dest = {}
 
-        for index,item in enumerate(self.config.data):
+        for index,item in enumerate(self.items()):
             
-            funct = self.scan_folder
+            funct = self.__scan_folder
             if item.get('runable',False) == False or item.get('enable',False) == False:
-                funct = self.return_df
+                funct = self._return_df
 
             f = executor.submit(funct, (item['source']))
             futures_map_source[str(index) + ':' + item['source']] = len(futures)
@@ -170,7 +205,7 @@ class YABUS():
 
         total_files_found = 0 
 
-        for index,item in enumerate(self.config.data):
+        for index,item in enumerate(self.items()):
             df_source = results[ futures_map_source[str(index) + ':' +item['source']] ]
             df_dest = results[ futures_map_dest[str(index) + ':' +item['dest']] ]
 
@@ -179,7 +214,7 @@ class YABUS():
             print(f' Files Found {total_files_found}',end='\r')
 
             if len(df_source) + len(df_dest) == 0 :
-                self.scan_cache.append(pd.DataFrame())
+                self.scan_cache = pd.concat([self.scan_cache,pd.DataFrame()])
                 continue
 
             self.logger.info(f'source: {len(df_source)}')
@@ -230,19 +265,25 @@ class YABUS():
             # if backup is true, and destination is not null, archive it
             df.loc[ ((df['fullpath_x'].isna() == True) & (df['fullpath_y'].isna() == False)) ,'archive'] = True
                     
-            self.scan_cache.append(df)
-            # print('scan: ',self.bar(len(self.scan_cache),len(self.config.data)),end='\r')
+            self.scan_cache = pd.concat([self.scan_cache,df])
+            # print('scan: ',self.bar(len(self.scan_cache),len(self.items())),end='\r')
         print('')
+
+        if self.save_cache_as_csv == True:
+            fn = os.path.join(self.logger.dir,f'cache_{datetime.datetime.now().strftime("%Y%m%d%H%M")}.csv')
+            self.logger.info(f'cache saved: {fn}')
+            self.scan_cache.to_csv(fn,index=False)
+
         self.logger.info('end')
 
-    def backup(self,row):
+    def _backup(self,row):
         """perform all the actions for backup one row of data
 
         Args:
             row (_type_): _description_
 
         Returns:
-            _type_: _description_
+            _type_: returns a row and the actions that were performed
         """
         # self.logger.info('start')
         result = {'actions':[],'row': row}
@@ -252,18 +293,27 @@ class YABUS():
             return result
 
         if row.get('archive',False) == True:
-            shutil.copy2(row["fullpath_y"],row["archive_dir"])
-            result['actions'].append('archive')
+            try:
+                shutil.copy2(row["fullpath_y"],row["archive_dir"])
+                result['actions'].append('archive')
+            except Exception as e:
+                self.logger.error(str(e))
 
         if row.get('remove_dest',False) == True:
-            os.remove(row["fullpath_y"])
-            result['actions'].append('remove_dest')
+            try:
+                os.remove(row["fullpath_y"])
+                result['actions'].append('remove_dest')
+            except Exception as e:
+                self.logger.error(str(e))
 
         if row.get('backup',False) == True:
-            dest = row['fullpath_x'].replace(row['rootpath_x'], row['rootpath_y'])
-            pathlib.Path('\\'.join(dest.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
-            shutil.copy2(row["fullpath_x"],dest)
-            result['actions'].append('backup')
+            try:
+                dest = row['fullpath_x'].replace(row['rootpath_x'], row['rootpath_y'])
+                pathlib.Path('\\'.join(dest.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
+                shutil.copy2(row["fullpath_x"],dest)
+                result['actions'].append('backup')
+            except Exception as e:
+                self.logger.error(str(e))
 
         if len(result['actions']) > 0:
             self.logger.info(result)
@@ -271,40 +321,35 @@ class YABUS():
         # self.logger.info('end')
         return result
 
-    def backup_all(self):
+    def backup(self):
         """backups all the rows of data
         """
         self.logger.info('start')
         # make sure there is scan_cache
-        if self.scan_cache == []:
+        if len(self.scan_cache) == 0:
             self.scan()
         
-        # put all the scan_cache together
-        all_cache = pd.DataFrame()
-        for i in self.scan_cache:
-            all_cache = pd.concat([all_cache,i])
-
-        records = all_cache.to_dict(orient='records')
+        records = self.scan_cache.to_dict(orient='records')
 
         executor = ThreadPoolExecutor(4)
         futures = []
         for index,record in enumerate(records):
 
-            if index%10 == 0:
+            if index%100 == 0:
                 print( 'backup process 1/2: ', self.bar((index+1),len(records)) ,end='\r')
 
-            f = executor.submit(self.backup, (record))
+            f = executor.submit(self._backup, (record))
             futures.append(f)
-        print()
+        print( 'backup process 1/2: ', self.bar(1,1))
         print('done 1/2')
         
         # print('processing...')
         results = []
         for index,f in enumerate(futures):
-            if index%10 == 0:
+            if index%100 == 0:
                 print( 'backup process 2/2: ', self.bar((index+1),len(records)) ,end='\r')
             results.append(f.result())
-        print()
+        print( 'backup process 2/2: ', self.bar(1,1))
         print('done 2/2')
 
         self.logger.info('end')
@@ -314,18 +359,9 @@ class YABUS():
 
 
 if __name__ == '__main__':
-    # config = {
-    #     # 'source': r'C:\Users\JGarza\Pictures',
-    #     # 'source': r'D:\UnityProjects\JellyObject',
-    #     'source': r'D:\UnityProjects',
-    #     'root_dest': r'C:\Users\JGarza\Desktop\x',
-    #     'options': '',
-    #     'ex_reg':r'',
-    #     'lastbackup': None #202303302110
-    # }
-    # process_item(config)
-    # print(config)
 
     yabus = YABUS()
-    yabus.backup_all()
+    yabus.save_cache_as_csv = True 
+    yabus.scan()
+    yabus.backup()
 

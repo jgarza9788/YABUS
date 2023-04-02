@@ -23,6 +23,9 @@ def createLogger(root: str = None,strtime_name: str = '%Y%m%d%H%M', useFileHande
     logger = logging.getLogger(name=log_name_time + '.log')
     logger.setLevel(logging.DEBUG)
 
+    logger.dir = root
+    logger.filename = os.path.join(root, log_name_time + '.log')
+
     if useFileHander:
         # add file hander
         fh = logging.FileHandler(filename=os.path.join(root, log_name_time + '.log'),encoding='utf-8')
