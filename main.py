@@ -1,6 +1,7 @@
 import os,datetime,pathlib
 import json5 as jason
 import pandas as pd
+import subprocess as sp
 
 import shutil
 
@@ -21,7 +22,7 @@ pd.set_option('display.width', None)
 class YABUS():
     def __init__(self,
                 config_dir:str = None,
-                save_cache_as_scv:bool = False,
+                save_cache_as_csv:bool = False,
                 verbose:bool = False
                 ):
         self.dir = os.path.dirname(os.path.realpath(__file__))
@@ -59,7 +60,7 @@ class YABUS():
         self.process_config()
 
         self.scan_cache = pd.DataFrame()
-        self.save_cache_as_csv = save_cache_as_scv
+        self.save_cache_as_csv = save_cache_as_csv
 
     def items(self):
         """returns a list of items that should be synced
@@ -356,12 +357,76 @@ class YABUS():
         print('done')
         self.scan_cache = []
 
+    def _replace(self,col:str,oldvalue:str,newvalue:str):
+        """replaces values in a column
 
+        Args:
+            col (str): _description_
+            oldvalue (str): _description_
+            newvalue (str): _description_
+        """
+        for item in self.items():
+            try:
+                item[col] = item[col].replace(oldvalue,newvalue)
+            except Exception as e:
+                self.logger.error( str(item) + ' - ' + str(e))
+        
+        self.process_config()
+
+        if self.verbose:
+            self.config.print()
+
+    def replace_root_dest(self,oldvalue:str,newvalue:str):
+        """replaces values in the root_dest column
+
+        Args:
+            oldvalue (str): _description_
+            newvalue (str): _description_
+        """
+        self._replace('root_dest',oldvalue,newvalue)
+        
+
+
+
+# def get_drives():
+#     # logging.info('getting list of all drives')
+#     command = "wmic logicaldisk get deviceid, volumename" 
+#     pipe = sp.Popen(command,shell=True,stdout=sp.PIPE,stderr=sp.PIPE)    
+
+#     # result = ''
+#     result = []
+#     for line in pipe.stdout.readlines():
+#         # print(line)
+#         line = str(line)
+#         if 'DeviceID' in line:
+#             continue
+#         if 'b\'\\r\\r\\n\'' == line:
+#             continue
+#         temp = line.replace('b\'','') 
+#         temp = temp.replace('\\r\\r\\n\'','')
+#         temp = temp.split(' ',1)
+
+#         t2 = {}
+#         for index,t in enumerate(temp):
+#             if index == 0:
+#                 t2['letter'] = t.strip()
+#             else:
+#                 t2['label'] = t.strip()
+#         result.append(t2)
+        
+#         # print(temp)
+#         # logging.info(f'found drive: {temp}')
+    
+#     return result 
+    
 
 if __name__ == '__main__':
 
-    yabus = YABUS()
-    yabus.save_cache_as_csv = True 
-    yabus.scan()
+    yabus = YABUS(verbose=False)
+    # yabus.save_cache_as_csv = True 
+    # yabus.replace_root_dest(oldvalue='F:\\',newvalue='C:\\')
+    # yabus.scan()
     yabus.backup()
+
+    # print(get_drives())
 

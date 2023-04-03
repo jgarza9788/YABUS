@@ -36,3 +36,6 @@ class DataManager():
         with open(self.file_dir,'w') as file:
             file.write(json.dumps(self.data,indent=4))
             self.logger.info(f'saved file {self.file_dir}')
+
+    def print(self):
+        print(json.dumps(self.data,indent=4))
