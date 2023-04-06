@@ -1,4 +1,0 @@
-relpath,fullpath_x,filename_x,size_x,modified_x,rootpath_x,fullpath_y,filename_y,size_y,modified_y,rootpath_y,archive_dir,options,skip,remove_dest,backup,archive
-One.json,C:\Users\JGarza\GitHub\YABUS\test\A\One.json,One.json,2.0,1680651532.0912328,C:\Users\JGarza\GitHub\YABUS\test\A,,,,,C:\Users\JGarza\GitHub\YABUS\test\B\A,C:\Users\JGarza\GitHub\YABUS\test\B\A\.archive\202304041938,,False,False,True,False
-Two.json,C:\Users\JGarza\GitHub\YABUS\test\A\Two.json,Two.json,18.0,1680651537.106648,C:\Users\JGarza\GitHub\YABUS\test\A,C:\Users\JGarza\GitHub\YABUS\test\B\A\Two.json,Two.json,2.0,1680651532.0922298,C:\Users\JGarza\GitHub\YABUS\test\B\A,C:\Users\JGarza\GitHub\YABUS\test\B\A\.archive\202304041938,,False,False,True,False
-Three.json,,,,,,C:\Users\JGarza\GitHub\YABUS\test\B\A\Three.json,Three.json,2.0,1680651532.0932279,C:\Users\JGarza\GitHub\YABUS\test\B\A,C:\Users\JGarza\GitHub\YABUS\test\B\A\.archive\202304041938,,False,True,False,True
