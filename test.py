@@ -33,7 +33,7 @@ def prepare_files():
     Two.save()
 
 
-def run_test():
+def run_yabus():
     dir = os.path.dirname(os.path.realpath(__file__))
     source = os.path.join(dir,'test','A')
     root_dest = os.path.join(dir,'test','B')
@@ -59,7 +59,7 @@ def checks():
 if __name__ == '__main__':
     clean()
     prepare_files()
-    run_test()
+    run_yabus()
 
 
 # this is the result that is expected 

@@ -113,11 +113,8 @@ class YABUS():
                 self.logger.error('no dest - will be disabled')
 
             # create archive directory
-            try:
-                item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
-                pathlib.Path(item['archive_dir']).mkdir(parents=True, exist_ok=True)
-            except:
-                pass
+            item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
+
         
         self.config.save()
         self.logger.info('done')
@@ -295,6 +292,13 @@ class YABUS():
             return result
 
         if row.get('archive',False) == True:
+            # create archive folder
+            try:
+                pathlib.Path(row['archive_dir']).mkdir(parents=True, exist_ok=True)
+            except:
+                pass
+
+            #archive the file
             try:
                 shutil.copy2(row["fullpath_y"],row["archive_dir"])
                 result['actions'].append('archive')
