@@ -127,7 +127,7 @@ class YABUS():
         p = (num)/den 
         return '[' + ('#'*(int(p * size))).ljust(size,'-') + ']'
 
-    def __scan_folder(self,root:str):
+    def _scan_folder(self,root:str):
         """scans a folder and returns a dataframe for all the files"""
         rootnum_minus_one = len(root.split('\\')) 
         result = []
@@ -185,7 +185,7 @@ class YABUS():
 
         for index,item in enumerate(self.items()):
             
-            funct = self.__scan_folder
+            funct = self._scan_folder
             if item.get('runable',False) == False or item.get('enable',False) == False:
                 funct = self._return_df
 
@@ -265,6 +265,7 @@ class YABUS():
             df['archive'] =  False
             # if backup is true, and destination is not null, archive it
             df.loc[ ((df['fullpath_x'].isna() == True) & (df['fullpath_y'].isna() == False)) ,'archive'] = True
+            df.loc[ ((df['backup'] == True) & (df['fullpath_x'].isna() == False) & (df['fullpath_y'].isna() == False)) ,'archive'] = True
                     
             self.scan_cache = pd.concat([self.scan_cache,df])
             # print('scan: ',self.bar(len(self.scan_cache),len(self.items())),end='\r')
