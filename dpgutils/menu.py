@@ -1,7 +1,26 @@
 import dearpygui.dearpygui as dpg
 
-def print_me(sender):
-    print(f"Menu Item: {sender}")
+from dpgutils.theme import apply_theme
+from .themes import theme_list
+
+
+# def print_me(sender):
+#     print(f"Menu Item: {sender}")
+
+
+def set_and_apply_theme(self,i):
+    try:
+        self.dpg_config.data['theme_id'] = i
+        apply_theme(self.dpg_config.data['theme_id'])
+        self.dpg_config.save()
+    except:
+        self.dpg_config.data['theme_id'] = 8
+        apply_theme(self.dpg_config.data['theme_id'])
+        self.dpg_config.save()
+    
+
+def theme_menu_item(self,i,t):
+    dpg.add_menu_item(label= str(i) + ': ' + t.name, callback=lambda: set_and_apply_theme(self,i))
 
 def menu(self):
     with dpg.viewport_menu_bar():
@@ -22,5 +41,6 @@ def menu(self):
                 callback=lambda: dpg.save_init_file(self.layout), 
                 )
             
-        # with dpg.menu(label="[Themes]"):
-        #         dpg.add_menu_item(label="Theme 1", callback=print_me, check=True)
+        with dpg.menu(label="[Themes]"):
+            for ith,th in enumerate(theme_list):
+                theme_menu_item(self,ith,th)

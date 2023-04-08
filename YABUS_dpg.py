@@ -22,7 +22,7 @@ import pandas as pd
 
 
 import dearpygui.dearpygui as dpg
-from dpgutils.theme import get_themes
+from dpgutils.theme import apply_theme
 from dpgutils.menu import menu
 # from dpgutils.items_window import items_window
 import dpgutils.items_window as iw
@@ -78,6 +78,14 @@ class MainWindow():
         if self.config_dir == None or self.config_dir == '':
             self.config_dir = os.path.join(self.dir,'config.json')
 
+
+        self.dpg_config = DataManager(
+            file_dir=os.path.join(self.dir,'dpgutils','dpg_config.json'),
+            logger=self.logger,
+            default={}
+            )
+
+
         
         self.yabus = YABUS(
             config_dir = self.config_dir,
@@ -87,12 +95,19 @@ class MainWindow():
             )
 
         dpg.create_context()
-
-        self.themes = {}
-        self.themes = get_themes()
-        dpg.bind_theme(self.themes['global_theme'])
-        
         # dpg.show_style_editor()
+
+        self.dpg_config.data['theme_id'] = self.dpg_config.data.get('theme_id',8)
+        apply_theme(self.dpg_config.data['theme_id'])
+        self.dpg_config.save()
+
+
+        # try:
+        #     t = get_theme(8)
+        # except Exception as e:
+        #     print(str(e))
+        # print(type(t),t)
+        # dpg.bind_theme(self.dpg_config.data['theme_id'])
 
         with dpg.font_registry():
             fontpath = os.path.join(self.dir,'dpgutils','Roboto_Mono_Nerd_Font_Complete_Mono.ttf')
@@ -176,9 +191,9 @@ class MainWindow():
         iw.build(self)
         self.update_output_text()
 
-    def enable_disable(self,index:int,value:bool):
-        self.logger.info(f'{index} {value}')
-        self.yabus.enable_disable(index,value)
+    def enable_disable(self,index:int):
+        self.logger.info(f'{index}')
+        self.yabus.enable_disable(index)
         iw.build(self)
         self.update_output_text()
 

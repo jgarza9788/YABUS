@@ -420,10 +420,11 @@ class YABUS():
         except Exception as e:
             self.logger.error(str(e))
 
-    def enable_disable(self,index:int,value:bool):
-        self.logger.info(f'{index} {value}')
+    def enable_disable(self,index:int):
         try:
-            self.config.data['items'][index]['enable'] != self.config.data['items'][index]['enable'] 
+            new_value = not (self.config.data['items'][index]['enable'] )
+            self.logger.info(f'{index} {new_value}')
+            self.config.data['items'][index]['enable'] = new_value
             self.config.save()
         except Exception as e:
             self.logger.error(str(e))
