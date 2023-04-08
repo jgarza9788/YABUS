@@ -1,9 +1,9 @@
 import os,time
 import shutil
 import json5 as json
-from dataMan import DataManager
+from utils.dataMan import DataManager
 
-from main import YABUS
+from YABUS import YABUS
 
 def clean():
     try:

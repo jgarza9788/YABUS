@@ -1,16 +1,35 @@
+
+"""\
+YABUS
+yet another backup script
+
+"""
+__author__ = "Justin Garza"
+__copyright__ = "Copyright 2023, Justin Garza"
+__credits__ = ["Justin Garza"]
+__license__ = "FSL"
+__version__ = "1.0.1"
+__maintainer__ = "Justin Garza"
+__email__ = "Justin Garza"
+__status__ = "Development"
+
+
 import os,datetime,pathlib
 import json5 as jason
 import pandas as pd
-import subprocess as sp
+
 
 import shutil
 
+# used for multi threading
 from concurrent.futures import ThreadPoolExecutor
 
-from dataMan import DataManager
+# data manager
+from utils.dataMan import DataManager
 
+# logging
 from logging import Logger
-from logMan import createLogger
+from utils.logMan import createLogger
 
 ## Pandas Options
 # show all the columns and rows
@@ -23,29 +42,30 @@ class YABUS():
     def __init__(self,
                 config_dir:str = None,
                 save_cache_as_csv:bool = False,
-                verbose:bool = False
+                verbose:bool = False,
+                logger:Logger = None
                 ):
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
-        self.logger = createLogger(
-            root=os.path.join(self.dir,'log'),
-            useStreamHandler=self.verbose
-            )
+
+
+        self.logger = logger
+        if self.logger == None:
+            self.logger = createLogger(
+                root=os.path.join(self.dir,'log'),
+                useStreamHandler=self.verbose
+                )
         
-        # print(self.logger.dir)
-        # print(self.logger.filename)
-        self.logger.info(self.logger.filename)
         
         self.config_dir = config_dir
         if self.config_dir == None or self.config_dir == '':
             self.config_dir = os.path.join(self.dir,'config.json')
 
-        self.default_config_item = {
+        self.default_config = {
             "items": [
                 {
                 'source': 'X:\\',
                 'root_dest': 'Y:\\',
-                'options': '',
                 'ex_reg':r'',
                 'lastbackup': None,
                 'enable': True, 
@@ -54,7 +74,8 @@ class YABUS():
             ]
         }
 
-        self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config_item.copy())
+
+        self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config.copy())
 
         
         self.process_config()
@@ -78,14 +99,11 @@ class YABUS():
         for item in self.items():
             self.logger.info(item)
 
-            item['options'] = item.get('options','') 
+            # item['options'] = item.get('options','') 
 
             item['runable'] = True
             item['enable'] = item.get('enable',True)
             
-            if item.get('lastbackup',None) == None:
-                item['lastbackup'] = datetime.datetime.now().strftime('%Y%m%d%H%M')
-
             # checks
             if item.get('source',None) == None:
                 item['runable'] = False
@@ -113,8 +131,10 @@ class YABUS():
                 self.logger.error('no dest - will be disabled')
 
             # create archive directory
-            item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
-
+            try:
+                item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
+            except:
+                pass
         
         self.config.save()
         self.logger.info('done')
@@ -167,7 +187,7 @@ class YABUS():
         """
         return pd.DataFrame()
 
-    def scan(self):
+    def scan(self,filter_index:int=None):
         """prepares the scan_cache (a dataframe for all the files/folders that needs to be archived/backedup)
         """
         print('Scanning Start ...')
@@ -180,7 +200,14 @@ class YABUS():
         futures_map_source = {}
         futures_map_dest = {}
 
-        for index,item in enumerate(self.items()):
+        items = self.items()
+        if filter_index != None:
+            try:
+                items = [items[filter_index]]
+            except Exception as e:
+                self.logger.error(str(e))
+
+        for index,item in enumerate(items):
             
             funct = self._scan_folder
             if item.get('runable',False) == False or item.get('enable',False) == False:
@@ -203,7 +230,7 @@ class YABUS():
 
         total_files_found = 0 
 
-        for index,item in enumerate(self.items()):
+        for index,item in enumerate(items):
             df_source = results[ futures_map_source[str(index) + ':' +item['source']] ]
             df_dest = results[ futures_map_dest[str(index) + ':' +item['dest']] ]
 
@@ -239,8 +266,12 @@ class YABUS():
 
             df = pd.merge(df_source,df_dest,how='outer',on='relpath')
 
+            df['index'] = index
+            if filter_index != None:
+                df['index'] = filter_index
+
             df['archive_dir'] = item['archive_dir']
-            df['options'] = item.get('options','')
+            # df['options'] = item.get('options','')
             df['rootpath_y'] = item['dest']
 
             df['skip'] =  False
@@ -355,12 +386,47 @@ class YABUS():
             if index%100 == 0:
                 print( 'backup process 2/2: ', self.bar((index+1),len(records)) ,end='\r')
             results.append(f.result())
+
+        indexes= []
+        for r in results:
+            i = int(r['row']['index'])
+            if i in indexes:
+                pass
+            else:
+                indexes.append(i)
+                self.config.data['items'][i]['lastbackup'] = datetime.datetime.now().strftime('%Y%m%d%H%M')
+                print(i,datetime.datetime.now().strftime('%Y%m%d%H%M'))
+        self.config.save()
+
         print( 'backup process 2/2: ', self.bar(1,1))
         print('done 2/2')
 
         self.logger.info('end')
         print('done')
         self.scan_cache = []
+
+    def backup_One(self,index:int):
+        try:
+            self.scan(index)
+            if len(self.scan_cache) > 0:
+                self.backup()
+        except Exception as e:
+            self.logger.error(str(e))
+    
+    def remove_One(self,index:int):
+        try:
+            del self.config.data['items'][index]
+            self.config.save()
+        except Exception as e:
+            self.logger.error(str(e))
+
+    def enable_disable(self,index:int,value:bool):
+        self.logger.info(f'{index} {value}')
+        try:
+            self.config.data['items'][index]['enable'] != self.config.data['items'][index]['enable'] 
+            self.config.save()
+        except Exception as e:
+            self.logger.error(str(e))
 
     def _replace(self,col:str,oldvalue:str,newvalue:str):
         """replaces values in a column
@@ -389,49 +455,16 @@ class YABUS():
             newvalue (str): _description_
         """
         self._replace('root_dest',oldvalue,newvalue)
-        
-
-
-
-# def get_drives():
-#     # logging.info('getting list of all drives')
-#     command = "wmic logicaldisk get deviceid, volumename" 
-#     pipe = sp.Popen(command,shell=True,stdout=sp.PIPE,stderr=sp.PIPE)    
-
-#     # result = ''
-#     result = []
-#     for line in pipe.stdout.readlines():
-#         # print(line)
-#         line = str(line)
-#         if 'DeviceID' in line:
-#             continue
-#         if 'b\'\\r\\r\\n\'' == line:
-#             continue
-#         temp = line.replace('b\'','') 
-#         temp = temp.replace('\\r\\r\\n\'','')
-#         temp = temp.split(' ',1)
-
-#         t2 = {}
-#         for index,t in enumerate(temp):
-#             if index == 0:
-#                 t2['letter'] = t.strip()
-#             else:
-#                 t2['label'] = t.strip()
-#         result.append(t2)
-        
-#         # print(temp)
-#         # logging.info(f'found drive: {temp}')
     
-#     return result 
-    
+    def add_new_item(self):
+        self.config.data['items'].append(self.default_config['items'][0])
+
+
+
 
 if __name__ == '__main__':
 
     yabus = YABUS(verbose=False)
-    # yabus.save_cache_as_csv = True 
-    # yabus.replace_root_dest(oldvalue='F:\\',newvalue='C:\\')
-    # yabus.scan()
     yabus.backup()
 
-    # print(get_drives())
 

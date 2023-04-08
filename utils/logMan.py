@@ -5,9 +5,15 @@ import datetime
 import logging 
 from logging import Logger
 # import logging.config
+from io import StringIO
 
-
-def createLogger(root: str = None,strtime_name: str = '%Y%m%d%H%M', useFileHander:bool = True, useStreamHandler:bool = True) -> Logger:
+def createLogger(
+                root: str = None,
+                strtime_name: str = '%Y%m%d%H%M', 
+                useFileHander:bool = True, 
+                useStreamHandler:bool = True,
+                strIO:StringIO = None,
+                ) -> Logger:
     if root == None:
         root = os.path.dirname(os.path.realpath(__file__))
         root = os.path.join(root,'log')
@@ -19,7 +25,8 @@ def createLogger(root: str = None,strtime_name: str = '%Y%m%d%H%M', useFileHande
     # log_name_time = datetime.datetime.now().strftime()
 
     # new logging
-    # logging.basicConfig(encoding='utf-8')
+    if strIO != None:
+        logging.basicConfig(stream=strIO, level=logging.INFO)
     logger = logging.getLogger(name=log_name_time + '.log')
     logger.setLevel(logging.DEBUG)
 
