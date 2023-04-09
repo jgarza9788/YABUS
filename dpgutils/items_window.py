@@ -71,8 +71,6 @@ def enable_disable(sender, app_data, user_data):
 def build(self):
     try:
         dpg.delete_item("##items")
-        for i in range(100):
-            dpg.delete_item(str(i)+'_row')
     except:
         pass
 
@@ -211,6 +209,7 @@ def build_row(self,index,data):
             )
         with dpg.tooltip(lbu_btn):
             dpg.add_text(misc.time_difference(data['lastbackup']))
+
 
 def items_window(self):
 

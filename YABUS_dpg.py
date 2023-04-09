@@ -166,26 +166,32 @@ class MainWindow():
         self.yabus.process_config()
         self.update_output_text()
         iw.build(self)
+        # iw.rebuild_items_window(self)
         
         #refresh the UI
 
     def run_all_items(self):
         self.yabus.process_config()
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.yabus.backup()
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.update_output_text()
     
     def run(self,index:int):
         self.yabus.process_config()
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.yabus.backup_One(index)
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.update_output_text()
 
     def remove_item(self,index:int):
         self.yabus.remove_One(index)
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.update_output_text()
 
     def enable_disable(self,index:int):
@@ -194,6 +200,7 @@ class MainWindow():
         self.logger.info(f'{index}')
         self.yabus.enable_disable(index)
         iw.build(self)
+        # iw.rebuild_items_window(self)
         self.update_output_text()
 
 
