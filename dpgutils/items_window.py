@@ -62,10 +62,20 @@ def remove_item(sender, app_data, user_data):
 def enable_disable(sender, app_data, user_data):
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
+    # try:
+    #     user_data['self'].enable_disable(user_data['index'])
+    # except Exception as e:
+    #     LOGGER.error(str(e))
+
     try:
-        user_data['self'].enable_disable(user_data['index'])
+        s = sender.split(',')
+        user_data.yabus.config.data['items'][int(s[0])][s[1]] = not user_data.yabus.config.data['items'][int(s[0])][s[1]]
+        user_data.yabus.config.save()
+        dpg.delete_item(sender)
+        build(user_data)
     except Exception as e:
         LOGGER.error(str(e))
+
 
 
 def build(self):
@@ -126,9 +136,10 @@ def build_row(self,index,data):
 
         enable_btn = dpg.add_button(
             label='' if data['enable'] ==  True else '',
-            tag=str(index) + '_enable',
+            tag=str(index) + ',enable',
             width=25,height=25,
-            user_data = {'index':index, 'data':data, 'self':self},
+            # user_data = {'index':index, 'data':data, 'self':self},
+            user_data = self,
             callback = enable_disable,
             enabled=True,
             )
@@ -250,6 +261,11 @@ def items_window(self):
         # no_title_bar=True,
         no_collapse=True
         ):
+
+        # dpg.add_button(
+        #     label="[+item]", 
+        #     callback=lambda: self.add_new_item()
+        #     )
 
         dpg.add_file_dialog(directory_selector=True, show=False, callback=self.change_folder_callback, tag='source'
             ,label = 'source'

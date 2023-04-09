@@ -26,7 +26,7 @@ def menu(self):
     with dpg.viewport_menu_bar():
 
         dpg.add_menu_item(label="[+item]", 
-            callback= self.add_new_item
+            callback=lambda: self.add_new_item()
             )
         
         with dpg.menu(label="[run_all_items]"):
@@ -39,6 +39,9 @@ def menu(self):
         with dpg.menu(label="[Save]"):
             dpg.add_menu_item(label="Save Layout", 
                 callback=lambda: dpg.save_init_file(self.layout), 
+                )
+            dpg.add_menu_item(label="Save Data", 
+                callback=lambda: self.yabus.config.save(), 
                 )
             
         with dpg.menu(label="[Themes]"):

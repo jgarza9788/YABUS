@@ -458,7 +458,8 @@ class YABUS():
         self._replace('root_dest',oldvalue,newvalue)
     
     def add_new_item(self):
-        self.config.data['items'].append(self.default_config['items'][0])
+        new = self.default_config['items'][0].copy()
+        self.config.data['items'].append(new)
         self.config.save()
 
 

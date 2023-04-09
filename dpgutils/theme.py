@@ -647,17 +647,17 @@ def apply_theme(theme_id:int=8):
     with dpg.theme() as global_theme:
         with dpg.theme_component(dpg.mvAll):
             for dpg_id, style in newTheme.styles.items():
-                tag = dpg.add_theme_style(dpg_id, *style, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg_id, *style, category=dpg.mvThemeCat_Core)
             for dpg_id, color in newTheme.colors.items():
-                tag = dpg.add_theme_color(dpg_id, color, category=dpg.mvThemeCat_Core)  
+                dpg.add_theme_color(dpg_id, color, category=dpg.mvThemeCat_Core)  
         for dpg_key in dpg_keys:
             try:
                 with dpg.theme_component(dpg_key,enabled_state=False):
                     for dpg_id, style in newTheme.styles.items():
-                        tag = dpg.add_theme_style(dpg_id, *style, category=dpg.mvThemeCat_Core)
+                        dpg.add_theme_style(dpg_id, *style, category=dpg.mvThemeCat_Core)
                     for dpg_id, color in newTheme.colors.items():
                         color = [int(c*0.5) for c in color]
-                        tag = dpg.add_theme_color(dpg_id, color, category=dpg.mvThemeCat_Core)  
+                        dpg.add_theme_color(dpg_id, color, category=dpg.mvThemeCat_Core)  
             except Exception as e:
                 print(str(e))
                 pass

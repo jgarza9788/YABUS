@@ -7,21 +7,23 @@ def output_window(self):
         no_close=True,
         show=True,
         # no_title_bar=True,
-        no_collapse=True
+        no_collapse=True,
         ):
 
-        sync_btn = dpg.add_button(label='',width=25,height=25,
-                                    callback=self.update_output_text)
-        with dpg.tooltip(sync_btn):
-            dpg.add_text('sync log')
+
+
+        # sync_btn = dpg.add_button(label='',width=25,height=25,
+        #                             callback=self.update_log)
+        # with dpg.tooltip(sync_btn):
+        #     dpg.add_text('sync log')
         # dpg.bind_item_theme(sync_btn,self.themes['muted_theme'])
-        dpg.bind_item_font(sync_btn,self.large_font)
+        # dpg.bind_item_font(sync_btn,self.large_font)
         dpg.add_text('',tag='output_text')
 
 
 
         # # with dpg.tree_node(label="Global"):
-        # with dpg.handler_registry(show=True, tag="__demo_keyboard_handler"):
+        # with dpg.handler_registry(show=True, tag="__mouse_move"):
         #     dpg.add_key_release_handler(key=dpg.mvKey_0,callback= self.update_output_text)
         #     dpg.add_key_release_handler(key=dpg.mvKey_1,callback= self.update_output_text)
         #     dpg.add_key_release_handler(key=dpg.mvKey_2,callback= self.update_output_text)
@@ -174,7 +176,7 @@ def output_window(self):
         #         button=dpg.mvMouseButton_Right,
         #         callback= self.update_output_text
         #         )
-        #     dpg.add_mouse_move_handler(
-        #         callback= self.update_output_text
-        #         )
+            # dpg.add_mouse_move_handler(
+            #     callback= self.update_output_text
+            #     )
 

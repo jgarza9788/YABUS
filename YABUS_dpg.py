@@ -16,7 +16,7 @@ __status__ = "Development"
 
 
 
-import os,datetime,pathlib
+import os,datetime,pathlib,time
 import json5 as jason
 import pandas as pd
 
@@ -37,6 +37,7 @@ from concurrent.futures import ThreadPoolExecutor
 from utils.dataMan import DataManager
 
 # logging
+import logging
 from logging import Logger
 from utils.logMan import createLogger
 from io import StringIO
@@ -63,6 +64,16 @@ class MainWindow():
             print('sorry error!')
             print(str(e))
 
+    def update_log(self):
+        try:
+            if (time.time() - self.rendertime) > 0.5:
+                loglines = self.logStream.getvalue().split('\n')
+                loglines.reverse()
+                dpg.set_value('output_text', '\n'.join(loglines))
+                self.rendertime = time.time()
+        except:
+            pass
+
     def __init__(self,config_dir=None,verbose=False):
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
@@ -85,7 +96,7 @@ class MainWindow():
             default={}
             )
 
-
+        self.rendertime = time.time()
         
         self.yabus = YABUS(
             config_dir = self.config_dir,
@@ -134,7 +145,7 @@ class MainWindow():
             # manual_callback_management=True
             ) 
         
-        dpg.create_viewport(title="YABUS",width=1175,height=800,x_pos = 400,y_pos = 25,)
+        dpg.create_viewport(title="YABUS",width=1180,height=1180,x_pos = 400,y_pos = 25,)
         dpg.setup_dearpygui()
 
         self.items_window = '##items_window'
@@ -145,63 +156,63 @@ class MainWindow():
 
         # self.lastLogTm = 0 
         output_window(self)
+        # logging.basicConfig(level=logging.DEBUG)
+        # logging.setLogRecordFactory(self.update_log)
         
 
         # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
-        dpg.start_dearpygui()
+        dpg.set_viewport_vsync(True)
+
+        while dpg.is_dearpygui_running():
+            self.update_log()
+            dpg.render_dearpygui_frame()
+
+        # dpg.start_dearpygui()
         dpg.destroy_context()  
 
-        self.update_output_text()
+        
 
-    def update_output_text(self):
-        # if (time.time() - self.lastLogTm) > 0.5:
-        loglines = self.logStream.getvalue().split('\n')
-        loglines.reverse()
-        dpg.set_value('output_text', '\n'.join(loglines))
-        # self.lastLogTm = time.time()
+    # def update_log(*args, **kwargs):
+    #     print('*'*10)
+    #     print(*args,sep='\n')
+    #     print(**kwargs)
+    #     print('*'*10)
+
+
+
 
     def add_new_item(self):
         self.yabus.add_new_item()
         self.yabus.process_config()
-        self.update_output_text()
         iw.build(self)
-        # iw.rebuild_items_window(self)
-        
-        #refresh the UI
+        # self.update_output_text()
 
     def run_all_items(self):
         self.yabus.process_config()
         iw.build(self)
-        # iw.rebuild_items_window(self)
         self.yabus.backup()
         iw.build(self)
-        # iw.rebuild_items_window(self)
-        self.update_output_text()
+        # self.update_output_text()
     
     def run(self,index:int):
         self.yabus.process_config()
         iw.build(self)
-        # iw.rebuild_items_window(self)
         self.yabus.backup_One(index)
         iw.build(self)
-        # iw.rebuild_items_window(self)
-        self.update_output_text()
+        # self.update_output_text()
 
     def remove_item(self,index:int):
         self.yabus.remove_One(index)
         iw.build(self)
-        # iw.rebuild_items_window(self)
-        self.update_output_text()
+        # self.update_output_text()
 
     def enable_disable(self,index:int):
         # self.yabus.process_config()
-        # iw.build(self)
         self.logger.info(f'{index}')
         self.yabus.enable_disable(index)
         iw.build(self)
-        # iw.rebuild_items_window(self)
-        self.update_output_text()
+        # self.update_output_text()
 
 
 if __name__ == "__main__":
