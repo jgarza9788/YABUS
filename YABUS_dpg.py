@@ -129,7 +129,9 @@ class MainWindow():
         dpg.configure_app(
             docking=True, 
             docking_space=True,
-            load_init_file=self.layout 
+            load_init_file=self.layout,
+            # wait_for_input=True
+            # manual_callback_management=True
             ) 
         
         dpg.create_viewport(title="YABUS",width=1175,height=800,x_pos = 400,y_pos = 25,)
@@ -145,13 +147,7 @@ class MainWindow():
         output_window(self)
         
 
-        # with dpg.window(label="",tag="Primary Window"):
-        #     dpg.add_text('hello 0xeb99  😀')
-        
-
-        # menu(self)
-
-        # dpg.set_primary_window("Primary Window", True)
+        # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
         dpg.start_dearpygui()
         dpg.destroy_context()  
@@ -168,8 +164,9 @@ class MainWindow():
     def add_new_item(self):
         self.yabus.add_new_item()
         self.yabus.process_config()
-        iw.build(self)
         self.update_output_text()
+        iw.build(self)
+        
         #refresh the UI
 
     def run_all_items(self):
@@ -192,6 +189,8 @@ class MainWindow():
         self.update_output_text()
 
     def enable_disable(self,index:int):
+        # self.yabus.process_config()
+        # iw.build(self)
         self.logger.info(f'{index}')
         self.yabus.enable_disable(index)
         iw.build(self)

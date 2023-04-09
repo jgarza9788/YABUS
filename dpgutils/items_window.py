@@ -59,10 +59,20 @@ def remove_item(sender, app_data, user_data):
     except Exception as e:    
         LOGGER.error(str(e))
 
+def enable_disable(sender, app_data, user_data):
+    global LOGGER
+    LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
+    try:
+        user_data['self'].enable_disable(user_data['index'])
+    except Exception as e:
+        LOGGER.error(str(e))
+
 
 def build(self):
     try:
         dpg.delete_item("##items")
+        for i in range(100):
+            dpg.delete_item(str(i)+'_row')
     except:
         pass
 
@@ -78,14 +88,22 @@ def build(self):
 
         for index,data in enumerate(self.yabus.items()):
             build_row(self,index,data)
+            # with dpg.group(horizontal=True) as row:
+            #     dpg.add_text('')
+
 
 def build_row(self,index,data):
     LOGGER.info(f'building {index} {data}')
-    with dpg.group(horizontal=True) as row:
+    with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
         # dpg.add_text(str(data))
 
         rt =  '' if data['runable'] == False else ' '
-        runable_btn = dpg.add_button(label=rt,width=25,height=25)
+        runable_btn = dpg.add_button(
+            label=rt,
+            tag=str(index) + '_runable',
+            width=25,
+            height=25
+            )
         # dpg.bind_item_theme(runable_btn,self.themes['red_text_theme'])
         dpg.bind_item_font(runable_btn,self.large_font)
         with dpg.tooltip(runable_btn):
@@ -95,19 +113,37 @@ def build_row(self,index,data):
                 dpg.add_text('this is runable')
 
         # with dpg.group(horizontal=True,width=25):
-        enable_cb = dpg.add_checkbox(
-            label='',
-            default_value = data['enable'], 
-            callback=lambda: self.enable_disable(index),
-            # enabled = bool(data['enabled']),
-            enabled = True
+        # enable_cb = dpg.add_checkbox(
+        #     label='',
+        #     tag=str(index) + '_enable',
+        #     default_value = data['enable'], 
+        #     # callback=lambda: self.enable_disable(index),
+        #     # enabled = bool(data['enabled']),
+        #     enabled = True,
+        #     user_data = {'index':index, 'data':data, 'self':self},
+        #     callback = enable_disable
+        #     )
+        # with dpg.tooltip(enable_cb):
+        #     dpg.add_text('enabled/disabled')
+
+        enable_btn = dpg.add_button(
+            label='' if data['enable'] ==  True else '',
+            tag=str(index) + '_enable',
+            width=25,height=25,
+            user_data = {'index':index, 'data':data, 'self':self},
+            callback = enable_disable,
+            enabled=True,
             )
-        with dpg.tooltip(enable_cb):
-            dpg.add_text('enabled/disabled')
+        dpg.bind_item_font(enable_btn,self.large_font)
+        with dpg.tooltip(enable_btn):
+            dpg.add_text('enable/disable')
 
         # print(data['enable'],data['runable'],(data['enable'] and data['runable']))
 
-        run_btn = dpg.add_button(label='',width=25,height=25,
+        run_btn = dpg.add_button(
+            label='',
+            tag=str(index) + '_run',
+            width=25,height=25,
             enabled = (data['enable'] and data['runable']),
             callback = lambda: self.run(index)
             )
@@ -116,7 +152,9 @@ def build_row(self,index,data):
         with dpg.tooltip(run_btn):
             dpg.add_text('run this item')
 
-        rm_btn = dpg.add_button(label='',width=25,height=25,
+        rm_btn = dpg.add_button(
+            label='',
+            width=25,height=25,
             # callback = lambda: print('removed..')
             tag= str(index) + ',remove_button',
             user_data = {'index':index, 'data':data, 'self':self},
@@ -130,6 +168,7 @@ def build_row(self,index,data):
 
         source_btn = dpg.add_button(
             label = misc.minimize_path(data['source']),
+            tag=str(index) + '_source',
             callback=lambda: edit_folder(self,index,'source'),
             width=250,
             height=25,
@@ -140,6 +179,7 @@ def build_row(self,index,data):
 
         rootdest_btn = dpg.add_button(
             label = misc.minimize_path(data['root_dest']),
+            tag=str(index) + '_root_dest',
             callback=lambda: edit_folder(self,index,'root_dest'),
             width=250,
             height=25,
@@ -164,6 +204,7 @@ def build_row(self,index,data):
 
         lbu_btn = dpg.add_button(
             label = misc.format_lastbackup(data['lastbackup']),
+            tag= str(index) + '_lastbackup',
             width=250,
             height=25,
             enabled = bool(data['enable']),
@@ -187,10 +228,6 @@ def items_window(self):
                     pos= (0,0),
                     no_resize=True,
                     ):
-        
-        # 332 x 187
-        
-
         try:
             dpg.add_text('Would you like to Remove this one ?')
             dpg.add_text(label='',tag='rm_index')

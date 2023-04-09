@@ -459,6 +459,7 @@ class YABUS():
     
     def add_new_item(self):
         self.config.data['items'].append(self.default_config['items'][0])
+        self.config.save()
 
 
 
