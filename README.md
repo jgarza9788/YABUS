@@ -49,4 +49,4 @@ yabus.backup()
 ```
 python YABUS_dpg.py
 ```
-![image](\misc\202304092225.png)
+![image](/misc/202304092225.png)
