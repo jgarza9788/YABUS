@@ -17,15 +17,19 @@ LOGGER = None
 
 def edit_folder(self,tag,sd):
     global LOGGER
-
     LOGGER.info(f'edit_folder({tag},{sd})')
-    self.index = int(tag)
-    # print(sd,self.yabus.config['items'][self.index][sd])
-    print(self.yabus.config.data['items'][self.index][sd])
-    dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
-    dpg.show_item(sd)
 
-    self.update_output_text()
+    try:
+        self.index = int(tag)
+        # print(sd,self.yabus.config['items'][self.index][sd])
+        print(self.yabus.config.data['items'][self.index][sd])
+        dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
+        dpg.show_item(sd)
+        self.update_output_text()
+    except Exception as e:
+        LOGGER.error(str(e))
+        LOGGER.error('while trying to pick a directory, you might not have permission')
+        
 
 def value_changed(sender, app_data, user_data):
     global LOGGER
