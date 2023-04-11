@@ -48,14 +48,12 @@ class YABUS():
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
 
-
         self.logger = logger
         if self.logger == None:
             self.logger = createLogger(
                 root=os.path.join(self.dir,'log'),
                 useStreamHandler=self.verbose
                 )
-        
         
         self.config_dir = config_dir
         if self.config_dir == None or self.config_dir == '':
@@ -74,10 +72,11 @@ class YABUS():
             ]
         }
 
+        self.progress_numerator = 0 
+        self.progress_denominator = 0
 
         self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config.copy())
 
-        
         self.process_config()
 
         self.scan_cache = pd.DataFrame()
@@ -131,10 +130,9 @@ class YABUS():
                 self.logger.error('no dest - will be disabled')
 
             # create archive directory
-            try:
-                item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
-            except:
-                pass
+            lbu = item.get('lastbackup','0'*12) #000000000000 if there is no lastbackup
+            item['archive_dir'] = os.path.join(item['dest'],'.archive',str(lbu))
+
         
         self.config.save()
         self.logger.info('done')
@@ -190,9 +188,12 @@ class YABUS():
     def scan(self,filter_index:int=None):
         """prepares the scan_cache (a dataframe for all the files/folders that needs to be archived/backedup)
         """
-        print('Scanning Start ...')
-        self.logger.info('start')
+        self.logger.info('Scanning Start ...')
         self.logger.info('scan_cache - cleared')
+
+        self.progress_numerator = 0 
+        self.progress_denominator = 0
+
         self.scan_cache = pd.DataFrame()
 
         executor = ThreadPoolExecutor(4)
@@ -207,7 +208,9 @@ class YABUS():
             except Exception as e:
                 self.logger.error(str(e))
 
+        self.progress_denominator += len(items)
         for index,item in enumerate(items):
+            self.progress_numerator += 1
             
             funct = self._scan_folder
             if item.get('runable',False) == False or item.get('enable',False) == False:
@@ -222,7 +225,9 @@ class YABUS():
             futures.append(f)
                 
         results = []
+        self.progress_denominator += len(futures)
         for f in futures:
+            self.progress_numerator += 1
             results.append(f.result())
 
         self.logger.info(f'futures_map_source: {str(futures_map_source)}')
@@ -230,7 +235,10 @@ class YABUS():
 
         total_files_found = 0 
 
+        self.progress_denominator += len(items)
         for index,item in enumerate(items):
+            self.progress_numerator += 1
+
             df_source = results[ futures_map_source[str(index) + ':' +item['source']] ]
             df_dest = results[ futures_map_dest[str(index) + ':' +item['dest']] ]
 
@@ -368,9 +376,11 @@ class YABUS():
         
         records = self.scan_cache.to_dict(orient='records')
 
+        self.progress_denominator += len(records)
         executor = ThreadPoolExecutor(4)
         futures = []
         for index,record in enumerate(records):
+            self.progress_numerator += 1
 
             if index%100 == 0:
                 print( 'backup process 1/2: ', self.bar((index+1),len(records)) ,end='\r')
@@ -382,13 +392,17 @@ class YABUS():
         
         # print('processing...')
         results = []
+        self.progress_denominator += len(futures)
         for index,f in enumerate(futures):
+            self.progress_numerator += 1
             if index%100 == 0:
                 print( 'backup process 2/2: ', self.bar((index+1),len(records)) ,end='\r')
             results.append(f.result())
 
         indexes= []
+        self.progress_denominator += len(results)
         for r in results:
+            self.progress_numerator += 1
             i = int(r['row']['index'])
             if i in indexes:
                 pass
@@ -403,7 +417,16 @@ class YABUS():
 
         self.logger.info('end')
         print('done')
+        self.progress_numerator = 0
+        self.progress_denominator = 0
         self.scan_cache = []
+
+    def get_progress(self):
+        if self.progress_denominator > 0:
+            return self.progress_numerator/self.progress_denominator
+        else:
+            return 0.0
+
 
     def backup_One(self,index:int):
         try:

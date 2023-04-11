@@ -17,15 +17,19 @@ LOGGER = None
 
 def edit_folder(self,tag,sd):
     global LOGGER
-
     LOGGER.info(f'edit_folder({tag},{sd})')
-    self.index = int(tag)
-    # print(sd,self.yabus.config['items'][self.index][sd])
-    print(self.yabus.config.data['items'][self.index][sd])
-    dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
-    dpg.show_item(sd)
 
-    self.update_output_text()
+    try:
+        self.index = int(tag)
+        # print(sd,self.yabus.config['items'][self.index][sd])
+        print(self.yabus.config.data['items'][self.index][sd])
+        dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
+        dpg.show_item(sd)
+        self.update_output_text()
+    except Exception as e:
+        LOGGER.error(str(e))
+        LOGGER.error('while trying to pick a directory, you might not have permission')
+        
 
 def value_changed(sender, app_data, user_data):
     global LOGGER
@@ -37,7 +41,6 @@ def value_changed(sender, app_data, user_data):
         user_data.yabus.config.save()
     except Exception as e:
         LOGGER.error(str(e))
-
 
 def remove_item(sender, app_data, user_data):
     global LOGGER
@@ -266,6 +269,22 @@ def items_window(self):
         #     label="[+item]", 
         #     callback=lambda: self.add_new_item()
         #     )
+
+        with dpg.group(horizontal=True,tag='progress_row') as row:
+            dpg.add_button(
+                label='',
+                tag='##progress_spinner',
+                # width=25,
+                height=25,
+            )
+            dpg.add_progress_bar(
+                # label='50/100',
+                tag='##progressbar',
+                height=25,
+                width=-1,
+                default_value=0.0,
+                # show=False
+            )
 
         dpg.add_file_dialog(directory_selector=True, show=False, callback=self.change_folder_callback, tag='source'
             ,label = 'source'
