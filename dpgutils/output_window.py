@@ -8,6 +8,7 @@ def output_window(self):
         show=True,
         # no_title_bar=True,
         no_collapse=True,
+        horizontal_scrollbar=True,
         ):
 
 
@@ -18,7 +19,16 @@ def output_window(self):
         #     dpg.add_text('sync log')
         # dpg.bind_item_theme(sync_btn,self.themes['muted_theme'])
         # dpg.bind_item_font(sync_btn,self.large_font)
+
         dpg.add_text('',tag='output_text')
+
+        # dpg.add_input_text(
+        #     label='',
+        #     tag='output_text',
+        #     width=-1,
+        #     height=-1,
+        #     multiline=True
+        #     )
 
 
 

@@ -166,21 +166,16 @@ class MainWindow():
 
         while dpg.is_dearpygui_running():
             self.update_log()
+            self.update_pb()
             dpg.render_dearpygui_frame()
 
         # dpg.start_dearpygui()
         dpg.destroy_context()  
 
-        
-
-    # def update_log(*args, **kwargs):
-    #     print('*'*10)
-    #     print(*args,sep='\n')
-    #     print(**kwargs)
-    #     print('*'*10)
-
-
-
+    def update_pb(self):
+        slices = ['|','/','-','\\']
+        dpg.configure_item("##progress_spinner", label=slices[self.yabus.progress_numerator%len(slices)])
+        dpg.configure_item("##progressbar", default_value=self.yabus.get_progress())
 
     def add_new_item(self):
         self.yabus.add_new_item()

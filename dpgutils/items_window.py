@@ -38,7 +38,6 @@ def value_changed(sender, app_data, user_data):
     except Exception as e:
         LOGGER.error(str(e))
 
-
 def remove_item(sender, app_data, user_data):
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
@@ -266,6 +265,22 @@ def items_window(self):
         #     label="[+item]", 
         #     callback=lambda: self.add_new_item()
         #     )
+
+        with dpg.group(horizontal=True,tag='progress_row') as row:
+            dpg.add_button(
+                label='',
+                tag='##progress_spinner',
+                # width=25,
+                height=25,
+            )
+            dpg.add_progress_bar(
+                # label='50/100',
+                tag='##progressbar',
+                height=25,
+                width=-1,
+                default_value=0.0,
+                # show=False
+            )
 
         dpg.add_file_dialog(directory_selector=True, show=False, callback=self.change_folder_callback, tag='source'
             ,label = 'source'
