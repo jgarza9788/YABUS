@@ -130,10 +130,9 @@ class YABUS():
                 self.logger.error('no dest - will be disabled')
 
             # create archive directory
-            try:
-                item['archive_dir'] = os.path.join(item['dest'],'.archive',item['lastbackup'])
-            except:
-                pass
+            lbu = item.get('lastbackup','0'*12) #000000000000 if there is no lastbackup
+            item['archive_dir'] = os.path.join(item['dest'],'.archive',lbu)
+
         
         self.config.save()
         self.logger.info('done')
