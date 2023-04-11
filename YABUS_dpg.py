@@ -66,11 +66,10 @@ class MainWindow():
 
     def update_log(self):
         try:
-            if (time.time() - self.rendertime) > 0.5:
-                loglines = self.logStream.getvalue().split('\n')
-                loglines.reverse()
-                dpg.set_value('output_text', '\n'.join(loglines))
-                self.rendertime = time.time()
+            loglines = self.logStream.getvalue().split('\n')
+            loglines.reverse()
+            dpg.set_value('output_text', '\n'.join(loglines))
+            self.rendertime = time.time()
         except:
             pass
 
@@ -96,7 +95,7 @@ class MainWindow():
             default={}
             )
 
-        self.rendertime = time.time()
+        
         
         self.yabus = YABUS(
             config_dir = self.config_dir,
@@ -164,9 +163,18 @@ class MainWindow():
         dpg.show_viewport()
         dpg.set_viewport_vsync(True)
 
+
+        self.rendertime = 0.0
+
         while dpg.is_dearpygui_running():
-            self.update_log()
-            self.update_pb()
+
+            # we do not need to render these every frame
+            # it's not a video game
+            if (time.time() - self.rendertime) > 0.5:
+                self.update_log()
+                self.update_pb()
+                self.rendertime = time.time()
+
             dpg.render_dearpygui_frame()
 
         # dpg.start_dearpygui()
