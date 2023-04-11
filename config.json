@@ -17,7 +17,7 @@
             lastbackup: "202304102051",
             enable: true,
             dest: "C:\\Users\\JGarza\\Desktop\\x\\Scripts",
-            archive_dir: "C:\\Users\\JGarza\\Desktop\\x\\Scripts\\.archive\\202304102049",
+            archive_dir: "C:\\Users\\JGarza\\Desktop\\x\\Scripts\\.archive\\202304102051",
             runable: true,
         },
         {
@@ -38,6 +38,7 @@
             enable: false,
             runable: false,
             dest: "Y:\\",
+            archive_dir: "Y:\\.archive\\None",
         },
     ],
 }

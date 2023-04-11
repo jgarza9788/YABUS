@@ -131,7 +131,7 @@ class YABUS():
 
             # create archive directory
             lbu = item.get('lastbackup','0'*12) #000000000000 if there is no lastbackup
-            item['archive_dir'] = os.path.join(item['dest'],'.archive',lbu)
+            item['archive_dir'] = os.path.join(item['dest'],'.archive',str(lbu))
 
         
         self.config.save()
