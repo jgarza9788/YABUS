@@ -332,14 +332,13 @@ class YABUS():
 
         if row.get('archive',False) == True:
             # create archive folder
-            try:
-                pathlib.Path(row['archive_dir']).mkdir(parents=True, exist_ok=True)
-            except:
-                pass
+            # pathlib.Path(row['archive_dir']).mkdir(parents=True, exist_ok=True)
 
             #archive the file
             try:
-                shutil.copy2(row["fullpath_y"],row["archive_dir"])
+                adir = os.path.join(row["archive_dir"],row['relpath'])
+                pathlib.Path(adir).mkdir(parents=True, exist_ok=True)
+                shutil.copy2(row["fullpath_y"],adir)
                 result['actions'].append('archive')
             except Exception as e:
                 self.logger.error(str(e))
@@ -383,12 +382,12 @@ class YABUS():
             self.progress_numerator += 1
 
             if index%100 == 0:
-                print( 'backup process 1/2: ', self.bar((index+1),len(records)) ,end='\r')
+                print( 'backup process 1/4: ', self.bar((index+1),len(records)) ,end='\r')
 
             f = executor.submit(self._backup, (record))
             futures.append(f)
-        print( 'backup process 1/2: ', self.bar(1,1))
-        print('done 1/2')
+        print( 'backup process 1/4: ', self.bar(1,1))
+        print('done 1/4')
         
         # print('processing...')
         results = []
@@ -396,7 +395,7 @@ class YABUS():
         for index,f in enumerate(futures):
             self.progress_numerator += 1
             if index%100 == 0:
-                print( 'backup process 2/2: ', self.bar((index+1),len(records)) ,end='\r')
+                print( 'backup process 2/4: ', self.bar((index+1),len(records)) ,end='\r')
             results.append(f.result())
 
         indexes= []
@@ -412,8 +411,40 @@ class YABUS():
                 print(i,datetime.datetime.now().strftime('%Y%m%d%H%M'))
         self.config.save()
 
-        print( 'backup process 2/2: ', self.bar(1,1))
-        print('done 2/2')
+        print( 'backup process 2/4: ', self.bar(1,1))
+        print('done 2/4')
+
+
+        ## clean up process
+
+        rootpaths_y = self.scan_cache.rootpath_y.unique().tolist()
+
+        self.progress_denominator += len(rootpaths_y)
+        executor = ThreadPoolExecutor(4)
+        futures = []
+        for index,rpy in enumerate(rootpaths_y):
+            self.progress_numerator += 1
+
+            if index%100 == 0:
+                print( 'backup process 3/4: ', self.bar((index+1),len(rootpaths_y)) ,end='\r')
+
+            f = executor.submit(self.clean_empty_folders, (rpy))
+            futures.append(f)
+        print( 'backup process 3/4: ', self.bar(1,1))
+        print('done 3/4')
+        
+        self.progress_denominator += len(futures)
+        for index,f in enumerate(futures):
+            self.progress_numerator += 1
+            if index%100 == 0:
+                print( 'backup process 4/4: ', self.bar((index+1),len(rootpaths_y)) ,end='\r')
+            f.result()
+
+        print( 'backup process 4/4: ', self.bar(1,1))
+        print('done 4/4')
+
+
+
 
         self.logger.info('end')
         print('done')
@@ -421,12 +452,22 @@ class YABUS():
         self.progress_denominator = 0
         self.scan_cache = []
 
+    def clean_empty_folders(self,dir):
+        # cleaning 
+        clean_count = 1
+        while clean_count > 0:
+            # remove folders that are empty
+            clean_count = 0
+            for dirpath, dirnames, filenames in os.walk(dir):
+                if len(dirnames) == 0 and len(filenames) == 0:
+                    os.rmdir(dirpath)
+                    clean_count += 1
+
     def get_progress(self):
         if self.progress_denominator > 0:
             return self.progress_numerator/self.progress_denominator
         else:
             return 0.0
-
 
     def backup_One(self,index:int):
         try:
