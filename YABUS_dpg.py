@@ -144,7 +144,7 @@ class MainWindow():
             # manual_callback_management=True
             ) 
         
-        dpg.create_viewport(title="YABUS",width=1180,height=1180,x_pos = 400,y_pos = 25,)
+        dpg.create_viewport(title="YABUS",width=1230,height=590,x_pos = 400,y_pos = 25,)
         dpg.setup_dearpygui()
 
         self.items_window = '##items_window'

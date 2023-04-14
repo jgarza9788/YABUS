@@ -1,3 +1,4 @@
+import os
 import dearpygui.dearpygui as dpg
 import dpgutils.misc as misc 
 
@@ -7,7 +8,9 @@ header_btns = [
     ['',25,'run this row'],
     ['',25,'remove this row'],
     ['source',250,'the source that we will backup'],
+    ['',25,'open source folder'],
     ['dest_root',250,'the destination we will copy the source to'],
+    ['',25,'open dest_root folder'],
     ['ex_reg',250,'exclude anything that matches this regex pattern'],
     ['lastbackup',250,'YYYY.mm.dd | HH:MM'],
 ]
@@ -123,20 +126,6 @@ def build_row(self,index,data):
             else:
                 dpg.add_text('this is runable')
 
-        # with dpg.group(horizontal=True,width=25):
-        # enable_cb = dpg.add_checkbox(
-        #     label='',
-        #     tag=str(index) + '_enable',
-        #     default_value = data['enable'], 
-        #     # callback=lambda: self.enable_disable(index),
-        #     # enabled = bool(data['enabled']),
-        #     enabled = True,
-        #     user_data = {'index':index, 'data':data, 'self':self},
-        #     callback = enable_disable
-        #     )
-        # with dpg.tooltip(enable_cb):
-        #     dpg.add_text('enabled/disabled')
-
         enable_btn = dpg.add_button(
             label='' if data['enable'] ==  True else '',
             tag=str(index) + ',enable',
@@ -189,6 +178,18 @@ def build_row(self,index,data):
         with dpg.tooltip(source_btn):
             dpg.add_text(data['source'])
 
+        slink_btn = dpg.add_button(
+            label = '',
+            tag=str(index) + '_source_link',
+            callback=lambda: os.startfile(data['source']),
+            width=25,
+            height=25,
+            enabled = (data['enable'] and data['runable']),
+            )
+        dpg.bind_item_font(slink_btn,self.large_font)
+        with dpg.tooltip(slink_btn):
+            dpg.add_text('open source folder')
+
         rootdest_btn = dpg.add_button(
             label = misc.minimize_path(data['root_dest']),
             tag=str(index) + '_root_dest',
@@ -199,6 +200,18 @@ def build_row(self,index,data):
             )
         with dpg.tooltip(rootdest_btn):
             dpg.add_text(data['root_dest'])
+
+        drlink_btn = dpg.add_button(
+            label = '',
+            tag=str(index) + '_root_dest_link',
+            callback=lambda: os.startfile(data['root_dest']),
+            width=25,
+            height=25,
+            enabled = (data['enable'] and data['runable']),
+            )
+        dpg.bind_item_font(drlink_btn,self.large_font)
+        with dpg.tooltip(drlink_btn):
+            dpg.add_text('open dest_root folder')
 
         ip_txt = dpg.add_input_text(
             label='',
@@ -259,10 +272,10 @@ def items_window(self):
 
     with dpg.window(tag=self.items_window,
         label='items',
-        no_close=True,
+        # no_close=True,
         show=True,
         # no_title_bar=True,
-        no_collapse=True
+        no_collapse=True,
         ):
 
         # dpg.add_button(

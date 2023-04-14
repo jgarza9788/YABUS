@@ -35,6 +35,16 @@ def menu(self):
                     callback= self.run_all_items
                     )
                 dpg.add_menu_item(label="No")
+
+        with dpg.menu(label="[widnows]"):
+            # with dpg.menu(label="output"):
+            dpg.add_menu_item(label="output", 
+                callback= lambda: dpg.configure_item(self.output_window, show=True)
+                )
+            dpg.add_menu_item(label="items", 
+                callback= lambda: dpg.configure_item(self.items_window, show=True)
+                )
+
             
         with dpg.menu(label="[Save]"):
             dpg.add_menu_item(label="Save Layout", 

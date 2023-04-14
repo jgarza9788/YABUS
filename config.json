@@ -7,7 +7,7 @@
             lastbackup: "202304132106",
             enable: true,
             dest: "C:\\Users\\JGarza\\Desktop\\x\\Pictures",
-            archive_dir: "C:\\Users\\JGarza\\Desktop\\x\\Pictures\\.archive\\202304102049",
+            archive_dir: "C:\\Users\\JGarza\\Desktop\\x\\Pictures\\.archive\\202304132106",
             runable: true,
         },
         {
@@ -29,6 +29,16 @@
             dest: "C:\\Users\\JGarza\\Desktop\\x\\GridDuel_Master",
             archive_dir: "C:\\Users\\JGarza\\Desktop\\x\\GridDuel_Master\\.archive\\202304122311",
             runable: true,
+        },
+        {
+            source: "X:\\",
+            root_dest: "Y:\\",
+            ex_reg: "",
+            lastbackup: null,
+            enable: false,
+            runable: false,
+            dest: "Y:\\",
+            archive_dir: "Y:\\.archive\\None",
         },
         {
             source: "X:\\",

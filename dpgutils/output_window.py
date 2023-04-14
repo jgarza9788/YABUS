@@ -4,7 +4,7 @@ import dearpygui.dearpygui as dpg
 def output_window(self):
     with dpg.window(tag=self.output_window,
         label='output',
-        no_close=True,
+        # no_close=True,
         show=True,
         # no_title_bar=True,
         no_collapse=True,
