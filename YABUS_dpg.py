@@ -28,8 +28,6 @@ from dpgutils.menu import menu
 import dpgutils.items_window as iw
 from dpgutils.output_window import output_window
 
-# import nerdfonts as nf
-
 # used for multi threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -47,7 +45,13 @@ from YABUS import YABUS
 
 class MainWindow():
 
-    def change_folder_callback(self,sender, app_data):
+    def change_folder_callback(self,sender:str, app_data:dict):
+        """a callback to change the folder data
+
+        Args:
+            sender (str): the item that sent the message
+            app_data (dict): additional data that might be sent
+        """
         try:
             self.logger.info('change_folder_callback')
 
@@ -65,6 +69,8 @@ class MainWindow():
             print(str(e))
 
     def update_log(self):
+        """updates the log
+        """
         try:
             loglines = self.logStream.getvalue().split('\n')
             loglines.reverse()
@@ -73,7 +79,13 @@ class MainWindow():
         except:
             pass
 
-    def __init__(self,config_dir=None,verbose=False):
+    def __init__(self,config_dir:str=None,verbose:bool=False):
+        """initalizes the application
+
+        Args:
+            config_dir (str, optional): _description_. Defaults to None.
+            verbose (bool, optional): _description_. Defaults to False.
+        """
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
 
@@ -95,8 +107,6 @@ class MainWindow():
             default={}
             )
 
-        
-        
         self.yabus = YABUS(
             config_dir = self.config_dir,
             save_cache_as_csv=self.verbose,
@@ -110,14 +120,6 @@ class MainWindow():
         self.dpg_config.data['theme_id'] = self.dpg_config.data.get('theme_id',8)
         apply_theme(self.dpg_config.data['theme_id'])
         self.dpg_config.save()
-
-
-        # try:
-        #     t = get_theme(8)
-        # except Exception as e:
-        #     print(str(e))
-        # print(type(t),t)
-        # dpg.bind_theme(self.dpg_config.data['theme_id'])
 
         with dpg.font_registry():
             fontpath = os.path.join(self.dir,'dpgutils','Roboto_Mono_Nerd_Font_Complete_Mono.ttf')
@@ -144,25 +146,19 @@ class MainWindow():
             # manual_callback_management=True
             ) 
         
-        dpg.create_viewport(title="YABUS",width=1230,height=590,x_pos = 400,y_pos = 25,)
+        dpg.create_viewport(title="YABUS",width=1230,height=800,x_pos = 400,y_pos = 25,)
         dpg.setup_dearpygui()
 
         self.items_window = '##items_window'
         self.output_window = '##output_window'
 
         menu(self)
-        iw.items_window(self)
-
-        # self.lastLogTm = 0 
         output_window(self)
-        # logging.basicConfig(level=logging.DEBUG)
-        # logging.setLogRecordFactory(self.update_log)
-        
+        iw.items_window(self)
 
         # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
         dpg.set_viewport_vsync(True)
-
 
         self.rendertime = 0.0
 
@@ -170,7 +166,7 @@ class MainWindow():
 
             # we do not need to render these every frame
             # it's not a video game
-            if (time.time() - self.rendertime) > 0.5:
+            if (time.time() - self.rendertime) > 0.25:
                 self.update_log()
                 self.update_pb()
                 self.rendertime = time.time()
@@ -181,17 +177,23 @@ class MainWindow():
         dpg.destroy_context()  
 
     def update_pb(self):
+        """updates the progress bar
+        """
         slices = ['|','/','-','\\']
         dpg.configure_item("##progress_spinner", label=slices[self.yabus.progress_numerator%len(slices)])
         dpg.configure_item("##progressbar", default_value=self.yabus.get_progress())
 
     def add_new_item(self):
+        """adds a new item
+        """
         self.yabus.add_new_item()
         self.yabus.process_config()
         iw.build(self)
         # self.update_output_text()
 
     def run_all_items(self):
+        """runs all the items
+        """
         self.yabus.process_config()
         iw.build(self)
         self.yabus.backup()
@@ -199,6 +201,11 @@ class MainWindow():
         # self.update_output_text()
     
     def run(self,index:int):
+        """runs one item
+
+        Args:
+            index (int): _description_
+        """
         self.yabus.process_config()
         iw.build(self)
         self.yabus.backup_One(index)
@@ -206,22 +213,28 @@ class MainWindow():
         # self.update_output_text()
 
     def remove_item(self,index:int):
+        """removes an item
+
+        Args:
+            index (int): _description_
+        """
         self.yabus.remove_One(index)
         iw.build(self)
         # self.update_output_text()
 
-    def enable_disable(self,index:int):
-        # self.yabus.process_config()
+    def toggle_enable(self,index:int):
+        """toggles enable and disable at the index
+
+        Args:
+            index (int): the item index that will be toggled
+        """
         self.logger.info(f'{index}')
-        self.yabus.enable_disable(index)
+        self.yabus.toggle_enable(index)
         iw.build(self)
-        # self.update_output_text()
 
 
 if __name__ == "__main__":
     MW = MainWindow(verbose=True)
 
-    # for i in nf.icons:
-    #     print(nf.icons[i],i)
 
 

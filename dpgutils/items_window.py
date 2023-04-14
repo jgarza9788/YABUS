@@ -18,7 +18,7 @@ header_btns = [
 
 LOGGER = None
 
-def edit_folder(self,tag,sd):
+def edit_folder(self,tag:str,sd:str):
     global LOGGER
     LOGGER.info(f'edit_folder({tag},{sd})')
 
@@ -34,7 +34,7 @@ def edit_folder(self,tag,sd):
         LOGGER.error('while trying to pick a directory, you might not have permission')
         
 
-def value_changed(sender, app_data, user_data):
+def value_changed(sender:str, app_data:any, user_data:any):
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
 
@@ -45,7 +45,7 @@ def value_changed(sender, app_data, user_data):
     except Exception as e:
         LOGGER.error(str(e))
 
-def remove_item(sender, app_data, user_data):
+def remove_item(sender:str, app_data:any, user_data:any):
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
 
@@ -65,13 +65,16 @@ def remove_item(sender, app_data, user_data):
     except Exception as e:    
         LOGGER.error(str(e))
 
-def enable_disable(sender, app_data, user_data):
+def toggle_enable(sender:str, app_data:any, user_data:any):
+    """toggles enable/disable
+
+    Args:
+        sender (_type_): _description_
+        app_data (_type_): _description_
+        user_data (_type_): _description_
+    """
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
-    # try:
-    #     user_data['self'].enable_disable(user_data['index'])
-    # except Exception as e:
-    #     LOGGER.error(str(e))
 
     try:
         s = sender.split(',')
@@ -85,6 +88,8 @@ def enable_disable(sender, app_data, user_data):
 
 
 def build(self):
+    """builds the main list of items
+    """
     try:
         dpg.delete_item("##items")
     except:
@@ -102,11 +107,15 @@ def build(self):
 
         for index,data in enumerate(self.yabus.items()):
             build_row(self,index,data)
-            # with dpg.group(horizontal=True) as row:
-            #     dpg.add_text('')
 
 
-def build_row(self,index,data):
+def build_row(self,index:int,data:dict):
+    """builds one row in the list 
+
+    Args:
+        index (int): the index
+        data (dict): data
+    """
     LOGGER.info(f'building {index} {data}')
     with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
         # dpg.add_text(str(data))
@@ -132,7 +141,7 @@ def build_row(self,index,data):
             width=25,height=25,
             # user_data = {'index':index, 'data':data, 'self':self},
             user_data = self,
-            callback = enable_disable,
+            callback = toggle_enable,
             enabled=True,
             )
         dpg.bind_item_font(enable_btn,self.large_font)
@@ -239,16 +248,20 @@ def build_row(self,index,data):
 
 
 def items_window(self):
+    """creates the item window and manages it
+    """
 
     global LOGGER
     LOGGER = self.logger 
 
     def rm_confirm():
+        """the final function to delete an item
+        """
         print(dpg.get_item_configuration('rm_check_dialog'))
         self.remove_item(int(dpg.get_value('rm_index').split(' - ')[1]))
         dpg.configure_item("rm_check_dialog", show=False)
         
-
+    # this is the remove item dialog window
     with dpg.window(label="Remove Item", modal=True, show=False, tag="rm_check_dialog", 
                     #no_title_bar=True,
                     pos= (0,0),
@@ -277,11 +290,6 @@ def items_window(self):
         # no_title_bar=True,
         no_collapse=True,
         ):
-
-        # dpg.add_button(
-        #     label="[+item]", 
-        #     callback=lambda: self.add_new_item()
-        #     )
 
         with dpg.group(horizontal=True,tag='progress_row') as row:
             dpg.add_button(

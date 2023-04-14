@@ -314,7 +314,7 @@ class YABUS():
 
         self.logger.info('end')
 
-    def _backup(self,row):
+    def _backup(self,row:dict) -> dict:
         """perform all the actions for backup one row of data
 
         Args:
@@ -452,7 +452,12 @@ class YABUS():
         self.progress_denominator = 0
         self.scan_cache = []
 
-    def clean_empty_folders(self,dir):
+    def clean_empty_folders(self,dir:str):
+        """removes blank folders from the dir
+
+        Args:
+            dir (str): _description_
+        """
         # cleaning 
         clean_count = 1
         while clean_count > 0:
@@ -463,13 +468,23 @@ class YABUS():
                     os.rmdir(dirpath)
                     clean_count += 1
 
-    def get_progress(self):
+    def get_progress(self) -> float:
+        """returns a float between 0.0 and 1.0 to show progress
+
+        Returns:
+            _type_: _description_
+        """
         if self.progress_denominator > 0:
             return self.progress_numerator/self.progress_denominator
         else:
             return 0.0
 
     def backup_One(self,index:int):
+        """performs a backup on one item
+
+        Args:
+            index (int): the index number of the item
+        """
         try:
             self.scan(index)
             if len(self.scan_cache) > 0:
@@ -478,13 +493,23 @@ class YABUS():
             self.logger.error(str(e))
     
     def remove_One(self,index:int):
+        """removes an item from the list of items
+
+        Args:
+            index (int): the index of the item that will be removed
+        """
         try:
             del self.config.data['items'][index]
             self.config.save()
         except Exception as e:
             self.logger.error(str(e))
 
-    def enable_disable(self,index:int):
+    def toggle_enable(self,index:int):
+        """toggles enable and disable at the index
+
+        Args:
+            index (int): the item index that will be toggled
+        """
         try:
             new_value = not (self.config.data['items'][index]['enable'] )
             self.logger.info(f'{index} {new_value}')
@@ -522,6 +547,8 @@ class YABUS():
         self._replace('root_dest',oldvalue,newvalue)
     
     def add_new_item(self):
+        """adds new item to list
+        """
         new = self.default_config['items'][0].copy()
         self.config.data['items'].append(new)
         self.config.save()

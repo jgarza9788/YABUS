@@ -4,11 +4,12 @@ from dpgutils.theme import apply_theme
 from .themes import theme_list
 
 
-# def print_me(sender):
-#     print(f"Menu Item: {sender}")
+def set_and_apply_theme(self,i:int):
+    """applys the theme
 
-
-def set_and_apply_theme(self,i):
+    Args:
+        i (index): index of theme
+    """
     try:
         self.dpg_config.data['theme_id'] = i
         apply_theme(self.dpg_config.data['theme_id'])
@@ -19,10 +20,18 @@ def set_and_apply_theme(self,i):
         self.dpg_config.save()
     
 
-def theme_menu_item(self,i,t):
+def theme_menu_item(self,i:int,t:str):
+    """creates a theme item
+
+    Args:
+        i (int): index of theme
+        t (str): theme name
+    """
     dpg.add_menu_item(label= str(i) + ': ' + t.name, callback=lambda: set_and_apply_theme(self,i))
 
 def menu(self):
+    """creates the menu
+    """
     with dpg.viewport_menu_bar():
 
         dpg.add_menu_item(label="[+item]", 
