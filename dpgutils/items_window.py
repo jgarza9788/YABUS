@@ -116,7 +116,7 @@ def build_row(self,index:int,data:dict):
         index (int): the index
         data (dict): data
     """
-    LOGGER.info(f'building {index} {data}')
+    # LOGGER.info(f'building {index} {data}')
     with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
         # dpg.add_text(str(data))
 

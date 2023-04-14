@@ -53,8 +53,6 @@ class MainWindow():
             app_data (dict): additional data that might be sent
         """
         try:
-            self.logger.info('change_folder_callback')
-
             print('index: ',self.index)
             print("Sender: ", sender)
             print("App Data: ", app_data)
@@ -64,8 +62,6 @@ class MainWindow():
             iw.build(self)
 
         except Exception as e:
-            self.logger.error('change_folder_callback')
-            print('sorry error!')
             print(str(e))
 
     def update_log(self):
@@ -228,7 +224,6 @@ class MainWindow():
         Args:
             index (int): the item index that will be toggled
         """
-        self.logger.info(f'{index}')
         self.yabus.toggle_enable(index)
         iw.build(self)
 
