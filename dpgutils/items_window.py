@@ -274,7 +274,7 @@ def items_window(self):
             dpg.add_button(
                 label='',
                 tag='##progress_spinner',
-                # width=25,
+                width=25,
                 height=25,
             )
             dpg.add_progress_bar(
