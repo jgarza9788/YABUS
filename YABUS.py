@@ -74,6 +74,7 @@ class YABUS():
 
         self.progress_numerator = 0 
         self.progress_denominator = 0
+        self.progress_status = ''
 
         self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config.copy())
 
@@ -189,6 +190,7 @@ class YABUS():
 
         self.progress_numerator = 0 
         self.progress_denominator = 0
+        self.progress_status = 'scanning files'
 
         self.scan_cache = pd.DataFrame()
         self.logger.info('scan_cache - cleared')
@@ -371,7 +373,9 @@ class YABUS():
         
         records = self.scan_cache.to_dict(orient='records')
 
-        self.progress_denominator += len(records)
+        self.progress_status = 'moving files'
+
+        self.progress_denominator += len(records) * 5
         executor = ThreadPoolExecutor(4)
         futures = []
         self.logger.info('1/4')
@@ -386,7 +390,7 @@ class YABUS():
         print( 'backup process 1/4: ', self.bar(1,1))
         
         results = []
-        self.progress_denominator += len(futures)
+        # self.progress_denominator += len(futures)
         self.logger.info('2/4')
         for index,f in enumerate(futures):
             self.progress_numerator += 1
@@ -395,7 +399,7 @@ class YABUS():
             results.append(f.result())
 
         indexes= []
-        self.progress_denominator += len(results)
+        # self.progress_denominator += len(results)
         for r in results:
             self.logger.info(r)
             self.progress_numerator += 1
@@ -413,7 +417,9 @@ class YABUS():
         ## clean up process
         rootpaths_y = self.scan_cache.rootpath_y.unique().tolist()
 
-        self.progress_denominator += len(rootpaths_y)
+        self.progress_status = 'removing empty folders'
+
+        # self.progress_denominator += len(rootpaths_y)
         executor = ThreadPoolExecutor(4)
         futures = []
         self.logger.info('3/4')
@@ -427,7 +433,7 @@ class YABUS():
             futures.append(f)
         print( 'backup process 3/4: ', self.bar(1,1))
         
-        self.progress_denominator += len(futures)
+        # self.progress_denominator += len(futures)
         self.logger.info('4/4')
         for index,f in enumerate(futures):
             self.progress_numerator += 1
@@ -437,6 +443,7 @@ class YABUS():
 
         print( 'backup process 4/4: ', self.bar(1,1))
         print('done')
+        self.progress_status = 'done'
         self.logger.info('end')
         
         self.progress_numerator = 0
@@ -460,16 +467,16 @@ class YABUS():
                     os.rmdir(dirpath)
                     clean_count += 1
 
-    def get_progress(self) -> float:
+    def get_progress(self) -> tuple:
         """returns a float between 0.0 and 1.0 to show progress
 
         Returns:
             _type_: _description_
         """
         if self.progress_denominator > 0:
-            return self.progress_numerator/self.progress_denominator
+            return (self.progress_status, self.progress_numerator/self.progress_denominator)
         else:
-            return 0.0
+            return (self.progress_status, 0.0)
 
     def backup_One(self,index:int):
         """performs a backup on one item

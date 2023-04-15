@@ -292,12 +292,28 @@ def items_window(self):
         ):
 
         with dpg.group(horizontal=True,tag='progress_row') as row:
-            dpg.add_button(
+            # dpg.add_button(
+            #     label='',
+            #     tag='##progress_step',
+            #     width=58,
+            #     height=25,
+            # )
+
+            spinnerbtn = dpg.add_button(
                 label='',
-                tag='##progress_spinner',
-                width=25,
+                tag='##progress_percent',
+                width=58,
                 height=25,
             )
+            with dpg.tooltip(spinnerbtn):
+                # dpg.add_text(label='',tag='##progress_status')
+                dpg.add_button(
+                    label='',
+                    tag='##progress_status',
+                    width=250,
+                    height=25,
+                )
+
             dpg.add_progress_bar(
                 # label='50/100',
                 tag='##progressbar',

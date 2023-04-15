@@ -176,8 +176,14 @@ class MainWindow():
         """updates the progress bar
         """
         slices = ['|','/','-','\\']
-        dpg.configure_item("##progress_spinner", label=slices[self.yabus.progress_numerator%len(slices)])
-        dpg.configure_item("##progressbar", default_value=self.yabus.get_progress())
+        # dpg.configure_item("##progress_spinner", label=slices[self.yabus.progress_numerator%len(slices)])
+
+        status, percent = self.yabus.get_progress()
+        # print('\n\n',status,percent,'\n\n')
+
+        dpg.configure_item("##progress_percent", label= '{:0.2f}'.format(percent * 100.0) )
+        dpg.configure_item("##progress_status", label= status )
+        dpg.configure_item("##progressbar", default_value=percent)
 
     def add_new_item(self):
         """adds a new item
