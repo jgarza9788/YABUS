@@ -39,7 +39,7 @@ def createLogger(
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s',
-            # datefmt=strtime
+            # datefmt='%Y%m%d %H:%M:%S.%f'
             )
         # formatter = logging.Formatter(
         #     '%(asctime)s - %(levelname)s - %(message)s',
@@ -53,7 +53,7 @@ def createLogger(
         sh.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s',
-            # datefmt=strtime
+            # datefmt='%Y%m%d %H:%M:%S.%f'
             )
         sh.setFormatter(formatter)
         logger.addHandler(sh)

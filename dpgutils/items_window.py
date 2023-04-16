@@ -28,7 +28,7 @@ def edit_folder(self,tag:str,sd:str):
         print(self.yabus.config.data['items'][self.index][sd])
         dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
         dpg.show_item(sd)
-        self.update_output_text()
+        # self.update_output_text()
     except Exception as e:
         LOGGER.error(str(e))
         LOGGER.error('while trying to pick a directory, you might not have permission')
@@ -291,13 +291,19 @@ def items_window(self):
         no_collapse=True,
         ):
 
+        with dpg.menu_bar():
+            dpg.add_menu_item(label="[+item]", 
+                callback=lambda: self.add_new_item()
+                )
+            
+            with dpg.menu(label="[run_all_items]"):
+                with dpg.menu(label="you sure ?"):
+                    dpg.add_menu_item(label="Yes", 
+                        callback= self.run_all_items
+                        )
+                    dpg.add_menu_item(label="No")
+
         with dpg.group(horizontal=True,tag='progress_row') as row:
-            # dpg.add_button(
-            #     label='',
-            #     tag='##progress_step',
-            #     width=58,
-            #     height=25,
-            # )
 
             spinnerbtn = dpg.add_button(
                 label='',

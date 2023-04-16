@@ -27,40 +27,55 @@ def theme_menu_item(self,i:int,t:str):
         i (int): index of theme
         t (str): theme name
     """
-    dpg.add_menu_item(label= str(i) + ': ' + t.name, callback=lambda: set_and_apply_theme(self,i))
+    # dpg.add_menu_item(label= str(i) + ': ' + t.name, callback=lambda: set_and_apply_theme(self,i))
+    dpg.add_button(
+        label= (str(i) + ': ' + t.name).ljust(35,' '),
+        callback=lambda: set_and_apply_theme(self,i),
+        width=250,
+        height=25,
+        # default_value= self.dpg_config.data['theme_id'] ==  i
+        )
 
 def menu(self):
     """creates the menu
     """
     with dpg.viewport_menu_bar():
 
-        dpg.add_menu_item(label="[+item]", 
-            callback=lambda: self.add_new_item()
-            )
+        # dpg.add_menu_item(label="[+item]", 
+        #     callback=lambda: self.add_new_item()
+        #     )
         
-        with dpg.menu(label="[run_all_items]"):
-            with dpg.menu(label="you sure ?"):
-                dpg.add_menu_item(label="Yes", 
-                    callback= self.run_all_items
-                    )
-                dpg.add_menu_item(label="No")
+        # with dpg.menu(label="[run_all_items]"):
+        #     with dpg.menu(label="you sure ?"):
+        #         dpg.add_menu_item(label="Yes", 
+        #             callback= self.run_all_items
+        #             )
+        #         dpg.add_menu_item(label="No")
 
         with dpg.menu(label="[widnows]"):
             # with dpg.menu(label="output"):
-            dpg.add_menu_item(label="output", 
-                callback= lambda: dpg.configure_item(self.output_window, show=True)
+            dpg.add_button(label="output", 
+                callback= lambda: dpg.configure_item(self.output_window, show=True),
+                width=250,
+                height=25
                 )
-            dpg.add_menu_item(label="items", 
-                callback= lambda: dpg.configure_item(self.items_window, show=True)
+            dpg.add_button(label="items", 
+                callback= lambda: dpg.configure_item(self.items_window, show=True),
+                width=250,
+                height=25
                 )
 
             
         with dpg.menu(label="[Save]"):
-            dpg.add_menu_item(label="Save Layout", 
+            dpg.add_button(label="Save Layout", 
                 callback=lambda: dpg.save_init_file(self.layout), 
+                width=250,
+                height=25
                 )
-            dpg.add_menu_item(label="Save Data", 
+            dpg.add_button(label="Save Data", 
                 callback=lambda: self.yabus.config.save(), 
+                width=250,
+                height=25
                 )
             
         with dpg.menu(label="[Themes]"):

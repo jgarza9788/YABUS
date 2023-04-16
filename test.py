@@ -53,7 +53,7 @@ def run_yabus():
 
     config = DataManager('.\\test\\config.json',default=data)
 
-    yabus = YABUS(config_dir=config.file_dir,verbose=False,save_cache_as_csv=True)
+    yabus = YABUS(config_dir=config.file_dir,verbose=False)
     yabus.backup()
 
 def mod_files():
@@ -69,7 +69,7 @@ def mod_files():
 
 def run_yabus_2():
     config = DataManager('.\\test\\config.json')
-    yabus = YABUS(config_dir=config.file_dir,verbose=False,save_cache_as_csv=True)
+    yabus = YABUS(config_dir=config.file_dir,verbose=False)
     yabus.backup()
 
 def checks():

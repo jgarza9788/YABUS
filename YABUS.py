@@ -41,7 +41,7 @@ pd.set_option('display.width', None)
 class YABUS():
     def __init__(self,
                 config_dir:str = None,
-                save_cache_as_csv:bool = False,
+                # save_cache_as_csv:bool = False,
                 verbose:bool = False,
                 logger:Logger = None
                 ):
@@ -81,7 +81,7 @@ class YABUS():
         self.process_config()
 
         self.scan_cache = pd.DataFrame()
-        self.save_cache_as_csv = save_cache_as_csv
+        # self.save_cache_as_csv = save_cache_as_csv
 
     def items(self):
         """returns a list of items that should be synced
@@ -283,7 +283,8 @@ class YABUS():
             if len(item.get('ex_reg','')) > 0:
                 df.loc[ (df['fullpath_x'].isna() == False ) & (df['fullpath_x'].str.contains(item['ex_reg'],regex=True)) ,'skip'] = True
             #these just need to automatically be skipped
-            df.loc[ (df['fullpath_x'].isna() == False ) & (df['fullpath_x'].str.contains(r'(?:desktop\.ini|Thumbs\.db)$',regex=True)) ,'skip'] = True
+            ## (?:desktop\.ini|Thumbs\.db)$
+            # df.loc[ (df['fullpath_x'].isna() == False ) & (df['fullpath_x'].str.contains(r'(?:desktop\.ini|Thumbs\.db)$',regex=True)) ,'skip'] = True
 
             df['remove_dest'] = False
             # if not in source, but in destination... remove from destination
@@ -303,10 +304,14 @@ class YABUS():
             self.scan_cache = pd.concat([self.scan_cache,df])
             # print('scan: ',self.bar(len(self.scan_cache),len(self.items())),end='\r')
 
-        if self.save_cache_as_csv == True:
-            fn = os.path.join(self.logger.dir,f'cache_{datetime.datetime.now().strftime("%Y%m%d%H%M")}.csv')
-            self.logger.info(f'cache saved: {fn}')
-            self.scan_cache.to_csv(fn,index=False)
+        # if self.save_cache_as_csv == True:
+        #     fn = os.path.join(self.logger.dir,f'cache_{datetime.datetime.now().strftime("%Y%m%d%H%M")}.csv')
+        #     self.logger.info(f'cache saved: {fn}')
+        #     self.scan_cache.to_csv(fn,index=False)
+        
+        if self.verbose == True:
+            for c in self.scan_cache.to_dict(orient='records'):
+                self.logger.info(c)
 
         self.logger.info(f'scan_cache size: {len(self.scan_cache)}')
         self.logger.info('end')
@@ -331,24 +336,19 @@ class YABUS():
             #archive the file
             try:
                 rpmf = '\\'.join(row['relpath'].split('\\')[:-1])
-                # adir = row["archive_dir"]
-                # if len(rpmf) > 0:
-                #     adir = os.path.join(row["archive_dir"],rpmf)
-                # self.logger.info(adir)
-
                 adir = os.path.join(row['rootpath_y'],row["archive_dir"],rpmf)
                 self.logger.info(adir)
 
                 pathlib.Path(adir).mkdir(parents=True, exist_ok=True)
                 shutil.copy2(row["fullpath_y"],adir)
-                result['actions'].append('archive')
+                result['actions'].append('copied to .archive')
             except Exception as e:
                 self.logger.error(str(e))
 
         if row.get('remove_dest',False) == True:
             try:
                 os.remove(row["fullpath_y"])
-                result['actions'].append('remove_dest')
+                result['actions'].append('deleted from destination')
             except Exception as e:
                 self.logger.error(str(e))
 
@@ -357,7 +357,7 @@ class YABUS():
                 dest = row['fullpath_x'].replace(row['rootpath_x'], row['rootpath_y'])
                 pathlib.Path('\\'.join(dest.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
                 shutil.copy2(row["fullpath_x"],dest)
-                result['actions'].append('backup')
+                result['actions'].append('copied to destination')
             except Exception as e:
                 self.logger.error(str(e))
 

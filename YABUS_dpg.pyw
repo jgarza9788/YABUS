@@ -105,7 +105,6 @@ class MainWindow():
 
         self.yabus = YABUS(
             config_dir = self.config_dir,
-            save_cache_as_csv=self.verbose,
             verbose= self.verbose,
             logger = self.logger
             )
@@ -129,6 +128,8 @@ class MainWindow():
                 large_font = f2
                 self.large_font = large_font
                 dpg.add_font_range(0x0100, 0xfeff)
+
+            
 
         dpg.bind_font(default_font)
         # dpg.show_font_manager()  
