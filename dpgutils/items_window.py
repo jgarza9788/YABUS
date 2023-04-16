@@ -13,6 +13,7 @@ header_btns = [
     ['',25,'open dest_root folder'],
     ['ex_reg',250,'exclude anything that matches this regex pattern'],
     ['lastbackup',250,'YYYY.mm.dd | HH:MM'],
+
 ]
 
 
@@ -107,6 +108,19 @@ def build(self):
 
         for index,data in enumerate(self.yabus.items()):
             build_row(self,index,data)
+
+        # with dpg.table(
+        #     header_row=True,
+        #     resizable=False,
+        #     borders_outerH=True, borders_innerV=True, borders_innerH=True, borders_outerV=True):
+
+        #     for h in header_btns:
+        #         dpg.add_table_column(label=h[0]) 
+            
+        #     for index,data in enumerate(self.yabus.items()):
+        #         with dpg.table_row():
+        #             build_row(self,index,data)
+
 
 
 def build_row(self,index:int,data:dict):
@@ -292,7 +306,7 @@ def items_window(self):
         ):
 
         with dpg.menu_bar():
-            dpg.add_menu_item(label="[+item]", 
+            dpg.add_menu_item(label="[item]", 
                 callback=lambda: self.add_new_item()
                 )
             
