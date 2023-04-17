@@ -143,7 +143,7 @@ class MainWindow():
             # manual_callback_management=True
             ) 
         
-        dpg.create_viewport(title="YABUS",width=1230,height=800,x_pos = 400,y_pos = 25,)
+        dpg.create_viewport(title="YABUS",width=1280,height=800,x_pos = 400,y_pos = 25,)
         dpg.setup_dearpygui()
 
         self.items_window = '##items_window'
@@ -193,6 +193,10 @@ class MainWindow():
         self.yabus.process_config()
         iw.build(self)
         # self.update_output_text()
+
+    def remove_last_item(self):
+        self.yabus.remove_last_item()
+        iw.build(self)
 
     def run_all_items(self):
         """runs all the items

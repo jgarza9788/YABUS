@@ -1,19 +1,25 @@
-import os
+import os,re
 import dearpygui.dearpygui as dpg
 import dpgutils.misc as misc 
 
 header_btns = [
-    ['',25,'red mark if item is not runable'],
-    ['',25,'enabled or not'],
-    ['',25,'run this row'],
-    ['',25,'remove this row'],
-    ['source',250,'the source that we will backup'],
-    ['',25,'open source folder'],
-    ['dest_root',250,'the destination we will copy the source to'],
-    ['',25,'open dest_root folder'],
-    ['ex_reg',250,'exclude anything that matches this regex pattern'],
-    ['lastbackup',250,'YYYY.mm.dd | HH:MM'],
+    # ['',25,'red mark if item is not runable'],
+    # ['',25,'enabled or not'],
+    # ['',25,'run this row'],
+    # ['',25,'remove this row'],
+    # ['source',250,'the source that we will backup'],
+    # ['',25,'open source folder'],
+    # ['dest_root',250,'the destination we will copy the source to'],
+    # ['',25,'open dest_root folder'],
+    # ['ex_reg',250,'exclude anything that matches this regex pattern'],
+    # ['lastbackup',250,'YYYY.mm.dd | HH:MM'],
 
+    ['   ',124],
+    ['Source',283],
+    ['Destination Root',283],
+    ['ex_reg',250],
+    ['LastBackUp',250]
+    
 ]
 
 
@@ -86,7 +92,9 @@ def toggle_enable(sender:str, app_data:any, user_data:any):
     except Exception as e:
         LOGGER.error(str(e))
 
-
+def clear_filter(self):
+    dpg.set_value('##filter','')
+    build(self)
 
 def build(self):
     """builds the main list of items
@@ -97,30 +105,46 @@ def build(self):
         pass
 
     with dpg.group(tag='##items',parent=self.items_window):
-        with dpg.group(horizontal=True) as row:
-            for h in header_btns:
-                btn = dpg.add_button(label=h[0],width=h[1],height=25)
-                with dpg.tooltip(btn):
-                    dpg.add_text(h[2])
-                # dpg.bind_item_theme(btn,self.themes['muted_theme'])
-                if len(h[0]) == 1:
-                    dpg.bind_item_font(btn,self.large_font)
-
-        for index,data in enumerate(self.yabus.items()):
-            build_row(self,index,data)
-
-        # with dpg.table(
-        #     header_row=True,
-        #     resizable=False,
-        #     borders_outerH=True, borders_innerV=True, borders_innerH=True, borders_outerV=True):
-
+        # with dpg.group(horizontal=True) as row:
         #     for h in header_btns:
-        #         dpg.add_table_column(label=h[0]) 
-            
-        #     for index,data in enumerate(self.yabus.items()):
-        #         with dpg.table_row():
-        #             build_row(self,index,data)
+        #         btn = dpg.add_button(label=h[0],width=h[1],height=25)
+        #         with dpg.tooltip(btn):
+        #             dpg.add_text(h[2])
+        #         # dpg.bind_item_theme(btn,self.themes['muted_theme'])
+        #         if len(h[0]) == 1:
+        #             dpg.bind_item_font(btn,self.large_font)
 
+        # for index,data in enumerate(self.yabus.items()):
+        #     build_row(self,index,data)
+        with dpg.table(
+            header_row=True,
+            resizable=False,
+            row_background=True,
+            borders_outerH=True, borders_innerV=True, borders_innerH=True, borders_outerV=True):
+
+            for index,h in enumerate(header_btns):
+                thisheader = dpg.add_table_column(label=h[0],width=h[1],width_fixed=True) 
+                if index == 1:
+                    dpg.bind_item_font(thisheader,self.large_font)
+
+
+            filter_text = dpg.get_value('##filter')
+            # print('filter_text:',filter_text)
+
+            if len(filter_text) > 0:
+                dpg.configure_item('##filterbtn',label='')
+            else:
+                dpg.configure_item('##filterbtn',label='')
+            # print('type(filter_text):',type(filter_text))
+
+            for index,data in enumerate(self.yabus.items()):
+                if filter_text!=None and re.search(filter_text,str(data),re.I) :
+                    with dpg.table_row():
+                        build_row(self,index,data)
+                
+                if filter_text == None:
+                    with dpg.table_row():
+                        build_row(self,index,data)
 
 
 def build_row(self,index:int,data:dict):
@@ -131,134 +155,158 @@ def build_row(self,index:int,data:dict):
         data (dict): data
     """
     # LOGGER.info(f'building {index} {data}')
-    with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
+    # with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
         # dpg.add_text(str(data))
 
-        rt =  '' if data['runable'] == False else ' '
-        runable_btn = dpg.add_button(
-            label=rt,
-            tag=str(index) + '_runable',
-            width=25,
-            height=25
-            )
-        # dpg.bind_item_theme(runable_btn,self.themes['red_text_theme'])
-        dpg.bind_item_font(runable_btn,self.large_font)
-        with dpg.tooltip(runable_btn):
-            if data['runable'] == False:
-                dpg.add_text('this is not runable/invalid')
-            else:
-                dpg.add_text('this is runable')
+    # red_text = None
+    # with dpg.theme() as red_text:
+    #     with dpg.theme_component(dpg.mvAll):
+    #         dpg.add_theme_color(dpg.mvThemeCol_Text,[225,0,0])
+    #     # red_text = red_text
 
-        enable_btn = dpg.add_button(
-            label='' if data['enable'] ==  True else '',
-            tag=str(index) + ',enable',
-            width=25,height=25,
-            # user_data = {'index':index, 'data':data, 'self':self},
-            user_data = self,
-            callback = toggle_enable,
-            enabled=True,
-            )
-        dpg.bind_item_font(enable_btn,self.large_font)
-        with dpg.tooltip(enable_btn):
-            dpg.add_text('enable/disable')
-
-        # print(data['enable'],data['runable'],(data['enable'] and data['runable']))
-
-        run_btn = dpg.add_button(
-            label='',
-            tag=str(index) + '_run',
-            width=25,height=25,
-            enabled = (data['enable'] and data['runable']),
-            callback = lambda: self.run(index)
-            )
-        # dpg.bind_item_theme(run_btn,self.themes['run_btn_theme'])
-        dpg.bind_item_font(run_btn,self.large_font)
-        with dpg.tooltip(run_btn):
-            dpg.add_text('run this item')
-
-        rm_btn = dpg.add_button(
-            label='',
-            width=25,height=25,
-            # callback = lambda: print('removed..')
-            tag= str(index) + ',remove_button',
-            user_data = {'index':index, 'data':data, 'self':self},
-            callback = remove_item
-            )
-        # dpg.bind_item_theme(rm_btn,self.themes['red_text_theme'])
-        dpg.bind_item_font(rm_btn,self.large_font)
-
-        with dpg.tooltip(rm_btn):
-            dpg.add_text('remove this item')
-
-        source_btn = dpg.add_button(
-            label = misc.minimize_path(data['source']),
-            tag=str(index) + '_source',
-            callback=lambda: edit_folder(self,index,'source'),
-            width=250,
-            height=25,
-            enabled = bool(data['enable']),
-            )
-        with dpg.tooltip(source_btn):
-            dpg.add_text(data['source'])
-
-        slink_btn = dpg.add_button(
-            label = '',
-            tag=str(index) + '_source_link',
-            callback=lambda: os.startfile(data['source']),
-            width=25,
-            height=25,
-            enabled = (data['enable'] and data['runable']),
-            )
-        dpg.bind_item_font(slink_btn,self.large_font)
-        with dpg.tooltip(slink_btn):
-            dpg.add_text('open source folder')
-
-        rootdest_btn = dpg.add_button(
-            label = misc.minimize_path(data['root_dest']),
-            tag=str(index) + '_root_dest',
-            callback=lambda: edit_folder(self,index,'root_dest'),
-            width=250,
-            height=25,
-            enabled = bool(data['enable']),
-            )
-        with dpg.tooltip(rootdest_btn):
-            dpg.add_text(data['root_dest'])
-
-        drlink_btn = dpg.add_button(
-            label = '',
-            tag=str(index) + '_root_dest_link',
-            callback=lambda: os.startfile(data['root_dest']),
-            width=25,
-            height=25,
-            enabled = (data['enable'] and data['runable']),
-            )
-        dpg.bind_item_font(drlink_btn,self.large_font)
-        with dpg.tooltip(drlink_btn):
-            dpg.add_text('open dest_root folder')
-
-        ip_txt = dpg.add_input_text(
-            label='',
-            tag= str(index) + ',ex_reg',
-            user_data = self,
-            default_value=data['ex_reg'],
-            width=250,
-            height=25,
-            enabled = bool(data['enable']),
-            callback = value_changed
-            )
-        with dpg.tooltip(ip_txt):
-            dpg.add_text(data['ex_reg'])
+    # green_text = None
+    # with dpg.theme() as green_text:
+    #     with dpg.theme_component(dpg.mvAll):
+    #         dpg.add_theme_color(dpg.mvThemeCol_Text,[0,255,0])
+    #     # green_text = green_text
 
 
-        lbu_btn = dpg.add_button(
-            label = misc.format_lastbackup(data['lastbackup']),
-            tag= str(index) + '_lastbackup',
-            width=250,
-            height=25,
-            enabled = bool(data['enable']),
-            )
-        with dpg.tooltip(lbu_btn):
-            dpg.add_text(misc.time_difference(data['lastbackup']))
+    with dpg.table_cell():
+        with dpg.group(horizontal=True):
+            rt =  '' if data['runable'] == False else ' '
+            runable_btn = dpg.add_button(
+                label=rt,
+                tag=str(index) + '_runable',
+                width=25,
+                height=25
+                )
+            # dpg.bind_item_theme(runable_btn,red_text)
+            dpg.bind_item_font(runable_btn,self.large_font)
+            with dpg.tooltip(runable_btn):
+                if data['runable'] == False:
+                    dpg.add_text('this is not runable/invalid')
+                else:
+                    dpg.add_text('this is runable')
+
+            enable_btn = dpg.add_button(
+                label='' if data['enable'] ==  True else '',
+                tag=str(index) + ',enable',
+                width=25,height=25,
+                # user_data = {'index':index, 'data':data, 'self':self},
+                user_data = self,
+                callback = toggle_enable,
+                enabled=True,
+                )
+            # dpg.bind_item_theme(enable_btn,green_text)
+            dpg.bind_item_font(enable_btn,self.large_font)
+            with dpg.tooltip(enable_btn):
+                dpg.add_text('enable/disable')
+
+            # print(data['enable'],data['runable'],(data['enable'] and data['runable']))
+
+            run_btn = dpg.add_button(
+                label='',
+                tag=str(index) + '_run',
+                width=25,height=25,
+                enabled = (data['enable'] and data['runable']),
+                callback = lambda: self.run(index)
+                )
+            # dpg.bind_item_theme(run_btn,green_text)
+            dpg.bind_item_font(run_btn,self.large_font)
+            with dpg.tooltip(run_btn):
+                dpg.add_text('run this item')
+
+            rm_btn = dpg.add_button(
+                label='',
+                width=25,height=25,
+                # callback = lambda: print('removed..')
+                tag= str(index) + ',remove_button',
+                user_data = {'index':index, 'data':data, 'self':self},
+                callback = remove_item
+                )
+            # dpg.bind_item_theme(rm_btn,red_text)
+            dpg.bind_item_font(rm_btn,self.large_font)
+
+            with dpg.tooltip(rm_btn):
+                dpg.add_text('remove this item')
+
+    with dpg.table_cell():
+        with dpg.group(horizontal=True):
+            source_btn = dpg.add_button(
+                label = misc.minimize_path(data['source']),
+                tag=str(index) + '_source',
+                callback=lambda: edit_folder(self,index,'source'),
+                width=250,
+                height=25,
+                enabled = bool(data['enable']),
+                )
+            with dpg.tooltip(source_btn):
+                dpg.add_text(data['source'])
+
+            slink_btn = dpg.add_button(
+                label = '',
+                tag=str(index) + '_source_link',
+                callback=lambda: os.startfile(data['source']),
+                width=25,
+                height=25,
+                enabled = (data['enable'] and data['runable']),
+                )
+            dpg.bind_item_font(slink_btn,self.large_font)
+            with dpg.tooltip(slink_btn):
+                dpg.add_text('open source folder')
+
+    with dpg.table_cell():
+        with dpg.group(horizontal=True):
+            rootdest_btn = dpg.add_button(
+                label = misc.minimize_path(data['root_dest']),
+                tag=str(index) + '_root_dest',
+                callback=lambda: edit_folder(self,index,'root_dest'),
+                width=250,
+                height=25,
+                enabled = bool(data['enable']),
+                )
+            with dpg.tooltip(rootdest_btn):
+                dpg.add_text(data['root_dest'])
+
+            drlink_btn = dpg.add_button(
+                label = '',
+                tag=str(index) + '_root_dest_link',
+                callback=lambda: os.startfile(data['root_dest']),
+                width=25,
+                height=25,
+                enabled = (data['enable'] and data['runable']),
+                )
+            dpg.bind_item_font(drlink_btn,self.large_font)
+            with dpg.tooltip(drlink_btn):
+                dpg.add_text('open dest_root folder')
+
+    with dpg.table_cell():
+        with dpg.group(horizontal=True):
+            exreg_btn = dpg.add_input_text(
+                label='',
+                tag= str(index) + ',ex_reg',
+                user_data = self,
+                default_value=data['ex_reg'],
+                width=250,
+                height=25,
+                multiline=True,
+                enabled = bool(data['enable']),
+                callback = value_changed
+                )
+            with dpg.tooltip(exreg_btn):
+                dpg.add_text(data['ex_reg'])
+
+    with dpg.table_cell():
+        with dpg.group(horizontal=True):
+            lbu_btn = dpg.add_button(
+                label = misc.format_lastbackup(data['lastbackup']),
+                tag= str(index) + '_lastbackup',
+                width=250,
+                height=25,
+                enabled = bool(data['enable']),
+                )
+            with dpg.tooltip(lbu_btn):
+                dpg.add_text(misc.time_difference(data['lastbackup']))
 
 
 def items_window(self):
@@ -306,9 +354,13 @@ def items_window(self):
         ):
 
         with dpg.menu_bar():
-            dpg.add_menu_item(label="[item]", 
+            dpg.add_menu_item(label="[+item]", 
                 callback=lambda: self.add_new_item()
                 )
+            
+            # dpg.add_menu_item(label="[-item]", 
+            #     callback=lambda: self.remove_last_item()
+            #     )
             
             with dpg.menu(label="[run_all_items]"):
                 with dpg.menu(label="you sure ?"):
@@ -351,5 +403,26 @@ def items_window(self):
             ,label = 'root of destination'
             ,modal = True
             ,width=650,height=650)
-            
+
+
+        with dpg.group(horizontal=True) as row:
+            filter_btn = dpg.add_button(
+                label='',
+                tag='##filterbtn',
+                width=25,
+                height=25,
+                callback=lambda: clear_filter(self)
+                )
+            dpg.bind_item_font(filter_btn,self.large_font)
+
+            dpg.add_input_text(
+                tag='##filter',
+                hint='type to filter (regex)',
+                height=25,
+                width=-1,
+                multiline=True,
+                callback=lambda: build(self),
+                # on_enter=True
+            )
+
         build(self)

@@ -552,8 +552,12 @@ class YABUS():
         self.config.data['items'].append(new)
         self.config.save()
 
-
-
+    def remove_last_item(self):
+        self.logger.info('remove last item')
+        # new = self.default_config['items'][0].copy()
+        # self.config.data['items'].append(new)
+        self.remove_One(len(self.config.data['items']) -1)
+        self.config.save()
 
 if __name__ == '__main__':
 
