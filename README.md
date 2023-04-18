@@ -49,4 +49,10 @@ yabus.backup()
 ```
 python YABUS_dpg.py
 ```
-![image](/misc/202304092225.png)
+
+
+<video width="640" height="480" controls>
+  <source src="/misc/20230417.mp4" type="video/mp4">
+</video>
+
+<!-- ![image](/misc/202304092225.png) -->
