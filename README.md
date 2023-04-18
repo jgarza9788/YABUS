@@ -52,7 +52,7 @@ python YABUS_dpg.py
 
 
 <video width="640" height="480" controls>
-  <source src="/misc/20230417.mp4" type="video/mp4">
+  <source src="./misc/20230417.mp4" type="video/mp4">
 </video>
 
 <!-- ![image](/misc/202304092225.png) -->
