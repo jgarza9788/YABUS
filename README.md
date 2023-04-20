@@ -51,10 +51,5 @@ python YABUS_dpg.py
 ```
 
 
-<!-- [video](./misc/20230417.mp4)  
-<video width="640" height="480" controls>
-  <source src="./misc/20230417.mp4" type="video/mp4">
-</video> -->
 
-
-[![Watch the video](./misc/20230417.png)](./misc/20230417.mp4)
+[![Click to Watch Video](./misc/20230417.png)](https://youtu.be/1LcjoyT4Wu0)
