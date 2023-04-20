@@ -2,20 +2,27 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-def minimize_path(path):
-    # logging.info(f'minimize_path({path})')
+def minimize_path(path:str):
+    """minimized the path to fit in the UI
+
+    Args:
+        path (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if len(path) <= 35:
         return path
     else: 
         return path[0:3] + '...\\' + path.split('\\')[-1]
+
     
-def format_lastbackup(lastbackup):
+def format_lastbackup(lastbackup:str):
     if lastbackup == None:
         return 'None'
-    
     return lastbackup[0:4] + '.' + lastbackup[4:6] + '.' + lastbackup[6:8] + ' | ' + lastbackup[8:10] + ':' + lastbackup[10:12]
 
-def time_difference(lastbackup):
+def time_difference(lastbackup:str):
     if lastbackup == None:
         return 'None'
     
