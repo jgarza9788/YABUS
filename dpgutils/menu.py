@@ -64,6 +64,11 @@ def menu(self):
                 width=250,
                 height=25
                 )
+            dpg.add_button(label="scan visualizer", 
+                callback= lambda: dpg.configure_item(self.scanvis_window, show=True),
+                width=250,
+                height=25
+                )
 
             
         with dpg.menu(label="[Save]"):

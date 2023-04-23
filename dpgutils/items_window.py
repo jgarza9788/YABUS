@@ -120,7 +120,10 @@ def build(self):
             header_row=True,
             resizable=False,
             row_background=True,
-            borders_outerH=True, borders_innerV=True, borders_innerH=True, borders_outerV=True):
+            borders_outerH=True, 
+            borders_innerV=True, 
+            borders_innerH=True, 
+            borders_outerV=True):
 
             for index,h in enumerate(header_btns):
                 thisheader = dpg.add_table_column(label=h[0],width=h[1],width_fixed=True) 
@@ -369,11 +372,11 @@ def items_window(self):
                         )
                     dpg.add_menu_item(label="No")
 
-        with dpg.group(horizontal=True,tag='progress_row') as row:
+        with dpg.group(horizontal=True,tag='progress_row2') as row:
 
             spinnerbtn = dpg.add_button(
                 label='',
-                tag='##progress_percent',
+                tag='##progress_percent0',
                 width=58,
                 height=25,
             )
@@ -381,14 +384,14 @@ def items_window(self):
                 # dpg.add_text(label='',tag='##progress_status')
                 dpg.add_button(
                     label='',
-                    tag='##progress_status',
+                    tag='##progress_status0',
                     width=250,
                     height=25,
                 )
 
             dpg.add_progress_bar(
                 # label='50/100',
-                tag='##progressbar',
+                tag='##progress_bar0',
                 height=25,
                 width=-1,
                 default_value=0.0,

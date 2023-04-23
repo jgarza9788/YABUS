@@ -4,11 +4,8 @@ import dearpygui.dearpygui as dpg
 def output_window(self):
     with dpg.window(tag=self.output_window,
         label='output',
-        # no_close=True,
-        # show=False,
-        # no_title_bar=True,
+        show=False,
         no_collapse=True,
-        # horizontal_scrollbar=True,
         ):
 
 

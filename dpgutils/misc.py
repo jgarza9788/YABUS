@@ -2,7 +2,7 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-def minimize_path(path:str):
+def minimize_path(path:str,maxlen:int=35):
     """minimized the path to fit in the UI
 
     Args:
@@ -11,7 +11,7 @@ def minimize_path(path:str):
     Returns:
         _type_: _description_
     """
-    if len(path) <= 35:
+    if len(path) <= maxlen:
         return path
     else: 
         return path[0:3] + '...\\' + path.split('\\')[-1]

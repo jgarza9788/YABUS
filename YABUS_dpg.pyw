@@ -26,6 +26,7 @@ from dpgutils.theme import apply_theme
 from dpgutils.menu import menu
 # from dpgutils.items_window import items_window
 import dpgutils.items_window as iw
+import dpgutils.scanvis_window as sv
 from dpgutils.output_window import output_window
 
 # used for multi threading
@@ -148,10 +149,12 @@ class MainWindow():
 
         self.items_window = '##items_window'
         self.output_window = '##output_window'
+        self.scanvis_window = '##scanvis_window'
 
         menu(self)
         output_window(self)
         iw.items_window(self)
+        sv.scanvis_window(self)
 
         # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
@@ -166,12 +169,22 @@ class MainWindow():
             if (time.time() - self.rendertime) > 0.25:
                 self.update_log()
                 self.update_pb()
+                self.update_scanvis()
                 self.rendertime = time.time()
 
             dpg.render_dearpygui_frame()
 
         # dpg.start_dearpygui()
         dpg.destroy_context()  
+
+    def update_scanvis(self):
+        # if len(self.yabus.scan_cache) == 0 and self.yabus.progress_status != 'scanning files':
+        # if len(self.yabus.scan_cache) == 0:
+        #     return 
+    
+        sv.build_scanvis(self)
+
+
 
     def update_pb(self):
         """updates the progress bar
@@ -182,9 +195,13 @@ class MainWindow():
         status, percent = self.yabus.get_progress()
         # print('\n\n',status,percent,'\n\n')
 
-        dpg.configure_item("##progress_percent", label= '{:0.2f}'.format(percent * 100.0) )
-        dpg.configure_item("##progress_status", label= status )
-        dpg.configure_item("##progressbar", default_value=percent)
+        for i in range(2):
+            try:
+                dpg.configure_item(f'##progress_percent{i}', label= '{:0.2f}'.format(percent * 100.0) )
+                dpg.configure_item(f'##progress_status{i}', label= status )
+                dpg.configure_item(f'##progress_bar{i}', default_value=percent)
+            except:
+                pass
 
     def add_new_item(self):
         """adds a new item
