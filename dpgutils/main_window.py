@@ -26,6 +26,12 @@ header_btns = [
 LOGGER = None
 
 def edit_folder(self,tag:str,sd:str):
+    """used to edit a foldewr
+
+    Args:
+        tag (str): tag of the item that sent it
+        sd (str): column name 
+    """
     global LOGGER
     LOGGER.info(f'edit_folder({tag},{sd})')
 
@@ -35,13 +41,22 @@ def edit_folder(self,tag:str,sd:str):
         print(self.yabus.config.data['items'][self.index][sd])
         dpg.configure_item(sd,default_path=self.yabus.config.data['items'][self.index][sd])
         dpg.show_item(sd)
+        user_data.yabus.process_config()
+        build(user_data)
+
         # self.update_output_text()
     except Exception as e:
         LOGGER.error(str(e))
         LOGGER.error('while trying to pick a directory, you might not have permission')
         
-
 def value_changed(sender:str, app_data:any, user_data:any):
+    """used to change a value of an item
+
+    Args:
+        sender (str): the itm tag that sent it
+        app_data (any): none
+        user_data (any): self
+    """
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
 
@@ -49,10 +64,20 @@ def value_changed(sender:str, app_data:any, user_data:any):
         s = sender.split(',')
         user_data.yabus.config.data['items'][int(s[0])][s[1]] = app_data
         user_data.yabus.config.save()
+        user_data.yabus.process_config()
+        build(user_data)
+
     except Exception as e:
         LOGGER.error(str(e))
 
 def remove_item(sender:str, app_data:any, user_data:any):
+    """to remove item (this function is trigged by clicking the x)
+
+    Args:
+        sender (str): the item tag that sent it
+        app_data (any): None
+        user_data (any): self
+    """
     global LOGGER
     LOGGER.info(f"sender: {sender}, \t app_data: {app_data}, \t user_data: {user_data}")
 
@@ -66,8 +91,6 @@ def remove_item(sender:str, app_data:any, user_data:any):
         dpg.set_value('rm_root_dest','root_dest - ' + user_data['data']['root_dest'])
         dpg.set_value('rm_lastbackup','lastbackup - ' + misc.format_lastbackup(user_data['data']['lastbackup']) )
         dpg.configure_item("rm_check_dialog", pos=( (dpg.get_viewport_width()//2) - (332//2) ,(dpg.get_viewport_height()//2) - (187//2)))
-
-
         dpg.configure_item("rm_check_dialog", show=True)
     except Exception as e:    
         LOGGER.error(str(e))
@@ -87,6 +110,7 @@ def toggle_enable(sender:str, app_data:any, user_data:any):
         s = sender.split(',')
         user_data.yabus.config.data['items'][int(s[0])][s[1]] = not user_data.yabus.config.data['items'][int(s[0])][s[1]]
         user_data.yabus.config.save()
+        user_data.yabus.process_config()
         dpg.delete_item(sender)
         build(user_data)
     except Exception as e:
@@ -104,7 +128,7 @@ def build(self):
     except:
         pass
 
-    with dpg.group(tag='##items',parent=self.items_window):
+    with dpg.group(tag='##items',parent=self.main_window):
         # with dpg.group(horizontal=True) as row:
         #     for h in header_btns:
         #         btn = dpg.add_button(label=h[0],width=h[1],height=25)
@@ -119,11 +143,13 @@ def build(self):
         with dpg.table(
             header_row=True,
             resizable=False,
+            # sortable=True,
             row_background=True,
-            borders_outerH=True, 
-            borders_innerV=True, 
-            borders_innerH=True, 
-            borders_outerV=True):
+            # borders_outerH=True, 
+            # borders_innerV=True, 
+            # borders_innerH=True, 
+            # borders_outerV=True
+            ):
 
             for index,h in enumerate(header_btns):
                 thisheader = dpg.add_table_column(label=h[0],width=h[1],width_fixed=True) 
@@ -148,7 +174,6 @@ def build(self):
                 if filter_text == None:
                     with dpg.table_row():
                         build_row(self,index,data)
-
 
 def build_row(self,index:int,data:dict):
     """builds one row in the list 
@@ -291,13 +316,19 @@ def build_row(self,index:int,data:dict):
                 user_data = self,
                 default_value=data['ex_reg'],
                 width=250,
-                height=25,
-                multiline=True,
+                height=33,
+                # multiline=True,
                 enabled = bool(data['enable']),
-                callback = value_changed
+                callback = value_changed,
+                on_enter = True
                 )
             with dpg.tooltip(exreg_btn):
                 dpg.add_text(data['ex_reg'])
+            # exreg_save_btn = dpg.add_button(
+            #     label = '󰳻',
+            #     width=25,
+            #     height=25,
+            # )
 
     with dpg.table_cell():
         with dpg.group(horizontal=True):
@@ -311,8 +342,7 @@ def build_row(self,index:int,data:dict):
             with dpg.tooltip(lbu_btn):
                 dpg.add_text(misc.time_difference(data['lastbackup']))
 
-
-def items_window(self):
+def main_window(self):
     """creates the item window and manages it
     """
 
@@ -325,11 +355,19 @@ def items_window(self):
         print(dpg.get_item_configuration('rm_check_dialog'))
         self.remove_item(int(dpg.get_value('rm_index').split(' - ')[1]))
         dpg.configure_item("rm_check_dialog", show=False)
+
+        self.yabus.process_config()
+        build(self)
         
     # this is the remove item dialog window
-    with dpg.window(label="Remove Item", modal=True, show=False, tag="rm_check_dialog", 
+    with dpg.window(label="Remove Item", 
+                    modal=True, 
+                    show=False, 
+                    tag="rm_check_dialog", 
                     #no_title_bar=True,
                     pos= (0,0),
+                    # width=500,
+                    # height=250,
                     no_resize=True,
                     ):
         try:
@@ -348,8 +386,8 @@ def items_window(self):
             dpg.configure_item("rm_check_dialog", show=False)
 
 
-    with dpg.window(tag=self.items_window,
-        label='items',
+    with dpg.window(tag=self.main_window,
+        label='main',
         # no_close=True,
         show=True,
         # no_title_bar=True,
@@ -360,11 +398,7 @@ def items_window(self):
             dpg.add_menu_item(label="[+item]", 
                 callback=lambda: self.add_new_item()
                 )
-            
-            # dpg.add_menu_item(label="[-item]", 
-            #     callback=lambda: self.remove_last_item()
-            #     )
-            
+
             with dpg.menu(label="[run_all_items]"):
                 with dpg.menu(label="you sure ?"):
                     dpg.add_menu_item(label="Yes", 
@@ -374,20 +408,34 @@ def items_window(self):
 
         with dpg.group(horizontal=True,tag='progress_row2') as row:
 
-            spinnerbtn = dpg.add_button(
+            statusbtn = dpg.add_button(
                 label='',
-                tag='##progress_percent0',
-                width=58,
+                tag='##progress_status0',
+                width=407,
                 height=25,
             )
-            with dpg.tooltip(spinnerbtn):
-                # dpg.add_text(label='',tag='##progress_status')
+            with dpg.tooltip(statusbtn):
                 dpg.add_button(
                     label='',
-                    tag='##progress_status0',
-                    width=250,
-                    height=25,
+                    tag='##progress_details0',
+                    # width=-1,
+                    # height=-1,
                 )
+
+            # spinnerbtn = dpg.add_button(
+            #     label='',
+            #     tag='##progress_percent0',
+            #     width=124,
+            #     height=25,
+            # )
+            # with dpg.tooltip(spinnerbtn):
+            #     # dpg.add_text(label='',tag='##progress_status')
+            #     dpg.add_button(
+            #         label='',
+            #         tag='##progress_status0',
+            #         width=250,
+            #         height=25,
+            #     )
 
             dpg.add_progress_bar(
                 # label='50/100',
