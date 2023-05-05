@@ -36,6 +36,13 @@ def theme_menu_item(self,i:int,t:str):
         # default_value= self.dpg_config.data['theme_id'] ==  i
         )
 
+def show_or_focus(item_name:str):
+
+    dpg.configure_item(item_name, show=True)
+    dpg.focus_item(item_name)
+
+
+
 def menu(self):
     """creates the menu
     """
@@ -52,18 +59,23 @@ def menu(self):
         #             )
         #         dpg.add_menu_item(label="No")
 
-        with dpg.menu(label="[widnows]"):
+        with dpg.menu(label="[windows]"):
             # with dpg.menu(label="output"):
-            dpg.add_button(label="output", 
-                callback= lambda: dpg.configure_item(self.output_window, show=True),
+            dpg.add_button(label="log window", 
+                callback= lambda: show_or_focus(self.log_window),
                 width=250,
                 height=25
                 )
-            dpg.add_button(label="items", 
-                callback= lambda: dpg.configure_item(self.items_window, show=True),
+            dpg.add_button(label="main window", 
+                callback= lambda: show_or_focus(self.main_window),
                 width=250,
                 height=25
                 )
+            # dpg.add_button(label="scan visualizer", 
+            #     callback= lambda: dpg.configure_item(self.scanvis_window, show=True),
+            #     width=250,
+            #     height=25
+            #     )
 
             
         with dpg.menu(label="[Save]"):

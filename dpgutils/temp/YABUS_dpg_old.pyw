@@ -9,7 +9,7 @@ __author__ = "Justin Garza"
 __copyright__ = "Copyright 2023, Justin Garza"
 __credits__ = ["Justin Garza"]
 __license__ = "FSL"
-__version__ = "1.5"
+__version__ = "1.0.1"
 __maintainer__ = "Justin Garza"
 __email__ = "Justin Garza"
 __status__ = "Development"
@@ -25,8 +25,9 @@ import dearpygui.dearpygui as dpg
 from dpgutils.theme import apply_theme
 from dpgutils.menu import menu
 # from dpgutils.items_window import items_window
-import dpgutils.main_window as mw
-from dpgutils.log_window import log_window
+import dpgutils.items_window_v2 as iw
+# import dpgutils.scanvis_window as sv
+from dpgutils.output_window import output_window
 
 # used for multi threading
 from concurrent.futures import ThreadPoolExecutor
@@ -59,7 +60,8 @@ class MainWindow():
 
             self.yabus.config.data['items'][self.index][sender] = app_data['file_path_name']
             self.yabus.config.save()
-            mw.build(self)
+            self.yabus.process_config()
+            iw.build(self)
 
         except Exception as e:
             print(str(e))
@@ -70,8 +72,8 @@ class MainWindow():
         try:
             loglines = self.logStream.getvalue().split('\n')
             loglines.reverse()
-            dpg.set_value('log_text', '\n'.join(loglines))
-            self.rendertime = time.time()
+            # loglines = loglines[0:500]
+            dpg.set_value('output_text', '\n'.join(loglines))
         except:
             pass
 
@@ -82,7 +84,6 @@ class MainWindow():
             config_dir (str, optional): _description_. Defaults to None.
             verbose (bool, optional): _description_. Defaults to False.
         """
-        self.old_lensc = 0
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self.verbose = verbose
 
@@ -147,98 +148,98 @@ class MainWindow():
         dpg.create_viewport(title="YABUS",width=1280,height=800,x_pos = 400,y_pos = 25,)
         dpg.setup_dearpygui()
 
-        self.main_window = '##main_window'
-        self.log_window = '##log_window'
+        self.items_window = '##items_window'
+        self.output_window = '##output_window'
+        self.scanvis_window = '##scanvis_window'
 
         menu(self)
-        log_window(self)
+        output_window(self)
+        iw.items_window(self)
+
         # iw.items_window(self)
-        mw.main_window(self)
+        # sv.scanvis_window(self)
 
         # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
-        # dpg.maximize_viewport()
         dpg.set_viewport_vsync(True)
 
-        self.rendertime = 0.0
+        self.rendertime0 = 0.0
+        # self.rendertime1 = 0.0
+
+        xtime = 0.0
 
         while dpg.is_dearpygui_running():
 
             # we do not need to render these every frame
             # it's not a video game
-            if (time.time() - self.rendertime) > 0.25:
+            if (time.time() - self.rendertime0) > 0.25:
+
+                # xtime = time.time()
                 self.update_log()
+                # self.logger.info(f'update log: {time.time() - xtime} ')
+                # xtime = time.time()
                 self.update_pb()
-                self.rendertime = time.time()
+                # self.logger.info(f'update pd: {time.time() - xtime} ')
+                # xtime = time.time()
+                # self.update_scanvis()
+                # self.logger.info(f'update scanvis: {time.time() - xtime} ')
+                # xtime = time.time()
+                self.rendertime0 = time.time()
+            
+            # if (time.time() - self.rendertime1) > 1.0:
+            #     self.update_scanvis()
+            #     self.rendertime1 = time.time()
 
             dpg.render_dearpygui_frame()
 
         # dpg.start_dearpygui()
         dpg.destroy_context()  
 
+    def update_scanvis(self):
+        # if len(self.yabus.scan_cache) == 0 and self.yabus.progress_status != 'scanning files':
+        # if len(self.yabus.scan_cache) == 0:
+        #     return 
+    
+        sv.build_scanvis(self)
+
     def update_pb(self):
         """updates the progress bar
         """
+        slices = ['|','/','-','\\']
+        # dpg.configure_item("##progress_spinner", label=slices[self.yabus.progress_numerator%len(slices)])
+
         status, percent = self.yabus.get_progress()
         # print('\n\n',status,percent,'\n\n')
 
-        for i in range(1):
+        for i in range(2):
             try:
-                # dpg.configure_item(f'##progress_percent{i}', label= '{:0.4f}'.format(percent * 100.0) )
+                dpg.configure_item(f'##progress_percent{i}', label= '{:0.4f}'.format(percent * 100.0) )
                 dpg.configure_item(f'##progress_status{i}', label= status )
                 dpg.configure_item(f'##progress_bar{i}', default_value=percent)
             except:
                 pass
-            # except Exception as ex:
-            #     self.logger.error(ex)
-
-            try:
-
-                sc = self.yabus.scan_cache.copy()
-                if len(sc) > 0 and len(sc) != self.old_lensc:
-                    sc = sc.fillna(0)
-                    details = ''
-                    details += f'Files: {len(sc)}\n'
-                    details += f'Skip: {len(sc[sc.skip == True])}\n'
-                    details += f'BackUp: {len(sc[sc.backup == True])}\n'
-                    details += f'Archive: {len(sc[sc.archive == True])}\n'
-                    details += f'-----\n'
-
-                    totalcnt = len(sc)
-                    indexes = list(sc.copy()["index"].unique())
-
-                    for inx in indexes:
-                        inxcnt = len(sc[sc["index"] == inx])
-                        details += f'{inx} : {inxcnt} : {(inxcnt/totalcnt)*100 :.2f}%\n'
-                    
-                    dpg.configure_item(f'##progress_details{i}', label=details)
-
-                    self.old_lensc = len(sc)
-            
-            # except:
-            #     pass
-            except Exception as ex:
-                self.logger.error(ex)
 
     def add_new_item(self):
         """adds a new item
         """
         self.yabus.add_new_item()
         self.yabus.process_config()
-        mw.build(self)
+        iw.build(self)
+        # self.update_output_text()
 
     def remove_last_item(self):
         self.yabus.remove_last_item()
-        mw.build(self)
+        iw.build(self)
 
     def run_all_items(self):
         """runs all the items
         """
         self.yabus.process_config()
-        mw.build(self)
+        iw.build(self)
         self.yabus.clear_scan_cache()
         self.yabus.backup()
-        mw.build(self)
+        iw.build(self)
+        # self.update_output_text()
     
     def run(self,index:int):
         """runs one item
@@ -247,9 +248,9 @@ class MainWindow():
             index (int): _description_
         """
         self.yabus.process_config()
-        mw.build(self)
+        iw.build(self)
         self.yabus.backup_One(index)
-        mw.build(self)
+        iw.build(self)
         # self.update_output_text()
 
     def remove_item(self,index:int):
@@ -259,7 +260,7 @@ class MainWindow():
             index (int): _description_
         """
         self.yabus.remove_One(index)
-        mw.build(self)
+        iw.build(self)
         # self.update_output_text()
 
     def toggle_enable(self,index:int):
@@ -269,7 +270,7 @@ class MainWindow():
             index (int): the item index that will be toggled
         """
         self.yabus.toggle_enable(index)
-        mw.build(self)
+        iw.build(self)
 
 
 if __name__ == "__main__":

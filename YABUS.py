@@ -8,7 +8,7 @@ __author__ = "Justin Garza"
 __copyright__ = "Copyright 2023, Justin Garza"
 __credits__ = ["Justin Garza"]
 __license__ = "FSL"
-__version__ = "1.0.1"
+__version__ = "1.5"
 __maintainer__ = "Justin Garza"
 __email__ = "Justin Garza"
 __status__ = "Development"
@@ -74,7 +74,8 @@ class YABUS():
 
         self.progress_numerator = 0 
         self.progress_denominator = 0
-        self.progress_status = ''
+        self.progress_status = 'None'
+        # self.status_map = ['','scanning','scan done','backing up','cleaning up']
 
         self.config = DataManager(file_dir=self.config_dir,logger=self.logger,default=self.default_config.copy())
 
@@ -82,6 +83,9 @@ class YABUS():
 
         self.scan_cache = pd.DataFrame()
         # self.save_cache_as_csv = save_cache_as_csv
+
+    def clear_scan_cache(self):
+        self.scan_cache = pd.DataFrame()
 
     def items(self):
         """returns a list of items that should be synced
@@ -125,12 +129,13 @@ class YABUS():
 
             # if dest doesn't exist we'll make it 
             if item.get('dest',None) != None and os.path.exists(item.get('dest',None)) == False:
-                try:
-                    pathlib.Path(item['dest']).mkdir(parents=True, exist_ok=True)
-                except Exception as e:
-                    self.logger.error(e)
-                    item['runable'] = False
-                    self.logger.error('invalid dest path - will be disabled')
+                self.logger.debug('dest doesn\'t exist, will create it later')
+                # try:
+                #     pathlib.Path(item['dest']).mkdir(parents=True, exist_ok=True)
+                # except Exception as e:
+                #     self.logger.error(e)
+                #     item['runable'] = False
+                #     self.logger.error('invalid dest path - will be disabled')
 
             if item.get('dest','') == '':
                 item['runable'] = False
@@ -188,9 +193,9 @@ class YABUS():
         """
         self.logger.info('Scanning Start ...')
 
-        self.progress_numerator = 0 
-        self.progress_denominator = 0
-        self.progress_status = 'scanning files'
+        self.progress_numerator = 1 
+        self.progress_denominator = 100
+        self.progress_status = 'Scan'
 
         self.scan_cache = pd.DataFrame()
         self.logger.info('scan_cache - cleared')
@@ -200,6 +205,15 @@ class YABUS():
         futures_map_source = {}
         futures_map_dest = {}
 
+        # for item in self.items():
+        #     if item.get('dest',None) != None and os.path.exists(item.get('dest',None)) == False:
+        #         try:
+        #             pathlib.Path(item['dest']).mkdir(parents=True, exist_ok=True)
+        #         except Exception as e:
+        #             item['runable'] = False
+        #             self.logger.error(e)
+        #             self.logger.error('invalid dest path - will be disabled')
+
         items = self.items()
         if filter_index != None:
             try:
@@ -207,10 +221,21 @@ class YABUS():
             except Exception as e:
                 self.logger.error(str(e))
 
-        self.progress_denominator += len(items)
+        self.progress_denominator = len(items)*2
+        self.progress_numerator = 0
         for index,item in enumerate(items):
-            self.progress_numerator += 1
+            self.progress_numerator += 0.33
             
+            # if item.get('dest',None) != None and os.path.exists(item.get('dest',None)) == False:
+            #     try:
+            #         pathlib.Path(item['dest']).mkdir(parents=True, exist_ok=True)
+            #     except:
+            #         pass
+                # except Exception as e:
+                #     item['runable'] = False
+                #     self.logger.error(e)
+                #     self.logger.error('invalid dest path - will be disabled')
+
             funct = self._scan_folder
             if item.get('runable',False) == False or item.get('enable',False) == False:
                 funct = self._return_df
@@ -224,19 +249,16 @@ class YABUS():
             futures.append(f)
                 
         results = []
-        self.progress_denominator += len(futures)
         for f in futures:
-            self.progress_numerator += 1
             results.append(f.result())
+            self.progress_numerator += 0.33
 
         # self.logger.info(f'futures_map_source: {str(futures_map_source)}')
         # self.logger.info(f'futures_map_dest: {str(futures_map_dest)}')
 
         total_files_found = 0 
-
-        self.progress_denominator += len(items)
         for index,item in enumerate(items):
-            self.progress_numerator += 1
+            self.progress_numerator += 0.34
 
             df_source = results[ futures_map_source[str(index) + ':' +item['source']] ]
             df_dest = results[ futures_map_dest[str(index) + ':' +item['dest']] ]
@@ -249,8 +271,8 @@ class YABUS():
                 self.scan_cache = pd.concat([self.scan_cache,pd.DataFrame()])
                 continue
 
-            self.logger.info(f'source: {len(df_source)}')
-            self.logger.info(f'dest: {len(df_dest)}')
+            # self.logger.info(f'source: {len(df_source)}')
+            # self.logger.info(f'dest: {len(df_dest)}')
 
             # must have specific columns
             columns = [
@@ -270,6 +292,7 @@ class YABUS():
 
             
             df = pd.merge(df_source,df_dest,how='outer',on='relpath')
+            df.fillna(0)
 
             df['index'] = index
             if filter_index != None:
@@ -292,7 +315,7 @@ class YABUS():
             
             df['backup'] =  False
             # if the size and modified is different, back up 
-            df.loc[ ((df['size_x'] != df['size_y']) | (df['modified_x'] != df['modified_y'])) ,'backup'] = True
+            df.loc[ ((df['size_x'] != df['size_y']) | ( abs(df['modified_y'] - df['modified_x']) > 2.0 )) ,'backup'] = True
             #if not in source... we can't back it up
             df.loc[ df['fullpath_x'].isna() ,'backup'] = False 
 
@@ -303,15 +326,15 @@ class YABUS():
                     
             self.scan_cache = pd.concat([self.scan_cache,df])
             # print('scan: ',self.bar(len(self.scan_cache),len(self.items())),end='\r')
-
-        # if self.save_cache_as_csv == True:
-        #     fn = os.path.join(self.logger.dir,f'cache_{datetime.datetime.now().strftime("%Y%m%d%H%M")}.csv')
-        #     self.logger.info(f'cache saved: {fn}')
-        #     self.scan_cache.to_csv(fn,index=False)
         
         if self.verbose == True:
-            for c in self.scan_cache.to_dict(orient='records'):
-                self.logger.info(c)
+            self.logger.info('\t'+ self.scan_cache.to_string().replace('\n', '\n\t')) 
+        else:
+            self.logger.info(f'scan_cache length {len(self.scan_cache)}')
+
+        
+        self.progress_numerator = 1 
+        self.progress_denominator = 1
 
         self.logger.info(f'scan_cache size: {len(self.scan_cache)}')
         self.logger.info('end')
@@ -336,8 +359,15 @@ class YABUS():
             #archive the file
             try:
                 rpmf = '\\'.join(row['relpath'].split('\\')[:-1])
-                adir = os.path.join(row['rootpath_y'],row["archive_dir"],rpmf)
-                self.logger.info(adir)
+                adir = os.path.join(row["archive_dir"],rpmf)
+
+                self.logger.info('*****')
+                self.logger.info(F'relpath {row["relpath"]}')
+                self.logger.info(F'rootpath_y {row["rootpath_y"]}')
+                self.logger.info(F'archive_dir {row["archive_dir"]}')
+                self.logger.info(F'rpmf {rpmf}')
+                self.logger.info(F'adir {adir}')
+                self.logger.info('*****')
 
                 pathlib.Path(adir).mkdir(parents=True, exist_ok=True)
                 shutil.copy2(row["fullpath_y"],adir)
@@ -348,14 +378,25 @@ class YABUS():
         if row.get('remove_dest',False) == True:
             try:
                 os.remove(row["fullpath_y"])
+
+                #remove folders if empty
+                # pf = '\\'.join(row['fullpath_y'].split('\\')[:-1])
+                self.clean_empty_folders(row['fullpath_y'])
+
                 result['actions'].append('deleted from destination')
             except Exception as e:
                 self.logger.error(str(e))
 
         if row.get('backup',False) == True:
             try:
+                # make destination
+                # pathlib.Path(row['dest']).mkdir(parents=True, exist_ok=True)
+                # self.logger.info(f'row[dest] {row["dest"]}')
+
                 dest = row['fullpath_x'].replace(row['rootpath_x'], row['rootpath_y'])
+                self.logger.info(f'dest {dest}')
                 pathlib.Path('\\'.join(dest.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
+
                 shutil.copy2(row["fullpath_x"],dest)
                 result['actions'].append('copied to destination')
             except Exception as e:
@@ -370,36 +411,56 @@ class YABUS():
         if len(self.scan_cache) == 0:
             self.logger.info('no scan_cache detected')
             self.scan()
+
+        sc = self.scan_cache.copy().fillna(0)
+
+        self.logger.info(f'Files in Cache: {len(sc)}')
+        self.logger.info(f'Skipped Files: {len(sc[sc.skip == True])}')
+        self.logger.info(f'BackUp Files: {len(sc[sc.backup == True])}')
+        self.logger.info(f'Archive Files: {len(sc[sc.archive == True])}')
+        self.logger.info(f'remove_dest Files: {len(sc[sc.remove_dest == True])}')
+
+        if len(sc[sc.backup == True]) == 0 and \
+            len(sc[sc.archive == True]) == 0 and \
+            len(sc[sc.remove_dest == True]) == 0:
+            self.progress_numerator = 1 
+            self.progress_denominator = 1
+            self.progress_status = 'Done'
+            self.logger.info('nothing to do ... according to the scan')
+            return 0 
+        
+
+
         
         records = self.scan_cache.to_dict(orient='records')
 
-        self.progress_status = 'moving files'
+        self.progress_numerator = 0 
+        self.progress_denominator = len(records) * 3
+        self.progress_status = 'Backing Up'
 
-        self.progress_denominator += len(records) * 5
         executor = ThreadPoolExecutor(4)
         futures = []
-        self.logger.info('1/4')
+        self.logger.info('1/2')
         for index,record in enumerate(records):
             self.progress_numerator += 1
 
             if index%100 == 0:
-                print( 'backup process 1/4: ', self.bar((index+1),len(records)) ,end='\r')
+                print( 'backup process 1/2: ', self.bar((index+1),len(records)) ,end='\r')
 
             f = executor.submit(self._backup, (record))
             futures.append(f)
-        print( 'backup process 1/4: ', self.bar(1,1))
+        print( 'backup process 1/2: ', self.bar(1,1))
         
         results = []
-        # self.progress_denominator += len(futures)
-        self.logger.info('2/4')
+        self.logger.info('2/2')
         for index,f in enumerate(futures):
             self.progress_numerator += 1
             if index%100 == 0:
-                print( 'backup process 2/4: ', self.bar((index+1),len(records)) ,end='\r')
+                print( 'backup process 2/2: ', self.bar((index+1),len(records)) ,end='\r')
+                # self.logger.info(f'2/4: results: {len(results)}')
             results.append(f.result())
 
         indexes= []
-        # self.progress_denominator += len(results)
         for r in results:
             self.logger.info(r)
             self.progress_numerator += 1
@@ -409,46 +470,20 @@ class YABUS():
             else:
                 indexes.append(i)
                 self.config.data['items'][i]['lastbackup'] = datetime.datetime.now().strftime('%Y%m%d%H%M')
-                print(i,datetime.datetime.now().strftime('%Y%m%d%H%M'))
+                # print(i,datetime.datetime.now().strftime('%Y%m%d%H%M'))
         self.config.save()
 
-        print( 'backup process 2/4: ', self.bar(1,1))
+        print( 'backup process 2/2: ', self.bar(1,1))
 
-        ## clean up process
-        rootpaths_y = self.scan_cache.rootpath_y.unique().tolist()
-
-        self.progress_status = 'removing empty folders'
-
-        # self.progress_denominator += len(rootpaths_y)
-        executor = ThreadPoolExecutor(4)
-        futures = []
-        self.logger.info('3/4')
-        for index,rpy in enumerate(rootpaths_y):
-            self.progress_numerator += 1
-
-            if index%100 == 0:
-                print( 'backup process 3/4: ', self.bar((index+1),len(rootpaths_y)) ,end='\r')
-
-            f = executor.submit(self.clean_empty_folders, (rpy))
-            futures.append(f)
-        print( 'backup process 3/4: ', self.bar(1,1))
-        
-        # self.progress_denominator += len(futures)
-        self.logger.info('4/4')
-        for index,f in enumerate(futures):
-            self.progress_numerator += 1
-            if index%100 == 0:
-                print( 'backup process 4/4: ', self.bar((index+1),len(rootpaths_y)) ,end='\r')
-            f.result()
-
-        print( 'backup process 4/4: ', self.bar(1,1))
+        # print( 'backup process 4/4: ', self.bar(1,1))
         print('done')
-        self.progress_status = 'done'
+        
         self.logger.info('end')
         
-        self.progress_numerator = 0
-        self.progress_denominator = 0
-        self.scan_cache = []
+        self.progress_numerator = 1
+        self.progress_denominator = 1
+        self.progress_status = 'Done'
+        self.scan_cache = pd.DataFrame()
 
     def clean_empty_folders(self,dir:str):
         """removes blank folders from the dir
@@ -456,16 +491,12 @@ class YABUS():
         Args:
             dir (str): _description_
         """
-        # cleaning 
-        clean_count = 1
-        while clean_count > 0:
-            # remove folders that are empty
-            clean_count = 0
-            for dirpath, dirnames, filenames in os.walk(dir):
-                if len(dirnames) == 0 and len(filenames) == 0:
-                    self.logger.info(f'{dirpath} is empty - deleting')
-                    os.rmdir(dirpath)
-                    clean_count += 1
+        pathlist = dir.split("\\")
+        for i in range(len(pathlist)-1,0,-1):
+            path = '\\'.join(pathlist[0:i])
+            if os.listdir(path) == []:
+                self.logger.info(f'{path} is empty - deleting')
+                os.rmdir(path)
 
     def get_progress(self) -> tuple:
         """returns a float between 0.0 and 1.0 to show progress
@@ -473,10 +504,15 @@ class YABUS():
         Returns:
             _type_: _description_
         """
-        if self.progress_denominator > 0:
-            return (self.progress_status, self.progress_numerator/self.progress_denominator)
-        else:
-            return (self.progress_status, 0.0)
+
+
+        percent = 0.0
+        if self.progress_denominator > 0.0:
+            percent = self.progress_numerator/self.progress_denominator
+        
+        status = f'{self.progress_status}: {percent*100.0:0.4f}'
+
+        return status, percent
 
     def backup_One(self,index:int):
         """performs a backup on one item

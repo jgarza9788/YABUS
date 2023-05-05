@@ -1,21 +1,21 @@
 import dearpygui.dearpygui as dpg
  
 
-def output_window(self):
-    with dpg.window(tag=self.output_window,
-        label='output',
-        # no_close=True,
+def log_window(self):
+    with dpg.window(tag=self.log_window,
+        label='log',
         # show=False,
-        # no_title_bar=True,
         no_collapse=True,
-        # horizontal_scrollbar=True,
+        width=500,
+        height=250
         ):
+
 
 
         # dpg.add_text('',tag='output_text')
         dpg.add_input_text(
             label='',
-            tag='output_text',
+            tag='log_text',
             multiline=True,
             width=-1,
             height=-1,

@@ -59,3 +59,20 @@ def createLogger(
         logger.addHandler(sh)
 
     return logger
+
+
+if __name__ == '__main__':
+    import os
+    from io import StringIO
+
+    dir = os.path.dirname(os.path.realpath(__file__))
+    logStream = StringIO()
+
+    thislogger = createLogger(
+        root=os.path.join(dir,'log'),
+        useStreamHandler=True,
+        strIO=logStream,
+        )
+    
+    thislogger.info("test-info")
+    thislogger.debug("test-debug")

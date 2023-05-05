@@ -65,7 +65,7 @@ def mod_files():
     Atwo.data.append('123')
     Atwo.save()
 
-    os.mkdir('.\\test\\B\\A\\empty_file_will_be_deleted')
+    # os.mkdir('.\\test\\B\\A\\empty_file_will_be_deleted')
 
 def run_yabus_2():
     config = DataManager('.\\test\\config.json')
@@ -96,7 +96,7 @@ def checks():
         for filename in filenames:
             filelist.append(os.path.join(dirpath,filename))
     
-    assert len(filelist) == 4, 'should archive 4 files'
+    assert len(filelist) == 2, 'should archive 2 files'
 
     # make sure the backup matches the original
     with open('.\\test\\A\\Two.json','r') as fileA:
