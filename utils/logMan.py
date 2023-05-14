@@ -4,6 +4,7 @@ import datetime
 
 import logging 
 from logging import Logger
+from logging.handlers import RotatingFileHandler
 # import logging.config
 from io import StringIO
 
@@ -31,11 +32,13 @@ def createLogger(
     logger.setLevel(logging.DEBUG)
 
     logger.dir = root
-    logger.filename = os.path.join(root, log_name_time + '.log')
+    # logger.filename = os.path.join(root, log_name_time + '.log')
+    logger.filename = os.path.join(root, 'log')
 
     if useFileHander:
         # add file hander
-        fh = logging.FileHandler(filename=os.path.join(root, log_name_time + '.log'),encoding='utf-8')
+        # fh = logging.FileHandler(filename=os.path.join(root, log_name_time + '.log'),encoding='utf-8')
+        fh = RotatingFileHandler(filename=os.path.join(root, 'log'),encoding='utf-8',maxBytes=25*1024*1024,backupCount=10)
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s',

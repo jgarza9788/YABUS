@@ -70,6 +70,7 @@ class MainWindow():
         try:
             loglines = self.logStream.getvalue().split('\n')
             loglines.reverse()
+            loglines = loglines[0:1000]
             dpg.set_value('log_text', '\n'.join(loglines))
             self.rendertime = time.time()
         except:

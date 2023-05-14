@@ -1,0 +1,1 @@
+start wt -p "pwsh" python C:\Users\JGarza\GitHub\YABUS\YABUS_dpg.pyw
