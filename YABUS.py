@@ -110,38 +110,29 @@ class YABUS():
             item['root_dest'] = item.get('root_dest','')
             item['dest'] = item.get('dest','')
 
-            lbu = item.get('lastbackup','0'*12) #000000000000 if there is no lastbackup
-            item['archive_dir'] = os.path.join(item['dest'],'.archive',str(lbu))
-            
-            # checks
-            if item.get('source',None) == None:
-                item['source'] = ''
-                item['runable'] = False
-                self.logger.error('no source - this will be disabled')
-
-            if os.path.exists(item.get('source',None)) == False:
-                item['runable'] = False
-                self.logger.error('invalid source path - will be disabled')
-
-            if item.get('root_dest','') != '':
+            if item['root_dest'] != '':
                 self.logger.info('root_dest will be used, and override dest')
+                if len(item['root_dest']) == 2:
+                    item['root_dest'] += "\\"
                 item['dest'] = os.path.join(item['root_dest'], item['source'].split('\\')[-1] )
 
-            # if dest doesn't exist we'll make it 
-            if item.get('dest',None) != None and os.path.exists(item.get('dest',None)) == False:
-                self.logger.debug('dest doesn\'t exist, will create it later')
-                # try:
-                #     pathlib.Path(item['dest']).mkdir(parents=True, exist_ok=True)
-                # except Exception as e:
-                #     self.logger.error(e)
-                #     item['runable'] = False
-                #     self.logger.error('invalid dest path - will be disabled')
+            item['ex_reg'] = item.get('ex_reg','')
 
-            if item.get('dest','') == '':
+            lbu = item.get('lastbackup','0'*12) #000000000000 if there is no lastbackup
+            item['archive_dir'] = os.path.join(item['dest'],'.archive',str(lbu))
+
+            #checks
+            if os.path.exists(item['source']) == False:
                 item['runable'] = False
-                item['dest'] = ''
-                self.logger.error('no dest - will be disabled')
-        
+                self.logger.warn('invalid source path - will be disabled')
+
+            if os.path.exists(item['root_dest']) == False:
+                item['runable'] = False
+                self.logger.warn('invalid root_dest path - will be disabled')
+
+            if os.path.exists(item['dest']) == False:
+                self.logger.debug('dest doesn\'t exist, will create it later')
+
         self.config.save()
         self.logger.info('done')
 
@@ -361,13 +352,13 @@ class YABUS():
                 rpmf = '\\'.join(row['relpath'].split('\\')[:-1])
                 adir = os.path.join(row["archive_dir"],rpmf)
 
-                self.logger.info('*****')
-                self.logger.info(F'relpath {row["relpath"]}')
-                self.logger.info(F'rootpath_y {row["rootpath_y"]}')
-                self.logger.info(F'archive_dir {row["archive_dir"]}')
-                self.logger.info(F'rpmf {rpmf}')
-                self.logger.info(F'adir {adir}')
-                self.logger.info('*****')
+                # self.logger.info('*****')
+                # self.logger.info(F'relpath {row["relpath"]}')
+                # self.logger.info(F'rootpath_y {row["rootpath_y"]}')
+                # self.logger.info(F'archive_dir {row["archive_dir"]}')
+                # self.logger.info(F'rpmf {rpmf}')
+                # self.logger.info(F'adir {adir}')
+                # self.logger.info('*****')
 
                 pathlib.Path(adir).mkdir(parents=True, exist_ok=True)
                 shutil.copy2(row["fullpath_y"],adir)
@@ -394,7 +385,7 @@ class YABUS():
                 # self.logger.info(f'row[dest] {row["dest"]}')
 
                 dest = row['fullpath_x'].replace(row['rootpath_x'], row['rootpath_y'])
-                self.logger.info(f'dest {dest}')
+                # self.logger.info(f'dest {dest}')
                 pathlib.Path('\\'.join(dest.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
 
                 shutil.copy2(row["fullpath_x"],dest)
@@ -420,19 +411,33 @@ class YABUS():
         self.logger.info(f'Archive Files: {len(sc[sc.archive == True])}')
         self.logger.info(f'remove_dest Files: {len(sc[sc.remove_dest == True])}')
 
-        if len(sc[sc.backup == True]) == 0 and \
-            len(sc[sc.archive == True]) == 0 and \
-            len(sc[sc.remove_dest == True]) == 0:
+        sc = sc[ (sc['archive'] == True) | (sc['backup'] == True) | (sc['remove_dest'] == True) ]
+        sc = sc[sc.skip == False]
+
+        # print(sc.describe())
+        # print(sc.head(10))
+        # print(sc.dtypes)
+
+        self.logger.info(f'Files to Process {len(sc)}')
+
+        # if len(sc[sc.backup == True]) == 0 and \
+        #     len(sc[sc.archive == True]) == 0 and \
+        #     len(sc[sc.remove_dest == True]) == 0:
+        #     self.progress_numerator = 1 
+        #     self.progress_denominator = 1
+        #     self.progress_status = 'Done'
+        #     self.logger.info('nothing to do ... according to the scan')
+        #     return 0 
+        
+        if len(sc) == 0:
             self.progress_numerator = 1 
             self.progress_denominator = 1
             self.progress_status = 'Done'
             self.logger.info('nothing to do ... according to the scan')
             return 0 
-        
 
-
-        
-        records = self.scan_cache.to_dict(orient='records')
+        # records = self.scan_cache.to_dict(orient='records')
+        records = sc.to_dict(orient='records')
 
         self.progress_numerator = 0 
         self.progress_denominator = len(records) * 3
@@ -491,6 +496,11 @@ class YABUS():
         Args:
             dir (str): _description_
         """
+
+        #skip any .git folders
+        if '.git' in dir:
+            return 
+
         pathlist = dir.split("\\")
         for i in range(len(pathlist)-1,0,-1):
             path = '\\'.join(pathlist[0:i])
@@ -522,6 +532,7 @@ class YABUS():
         """
         try:
             self.logger.info(f'only backing up one: {self.items()[index]}')
+            self.clear_scan_cache()
             self.scan(index)
             if len(self.scan_cache) > 0:
                 self.backup()

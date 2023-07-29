@@ -129,17 +129,6 @@ def build(self):
         pass
 
     with dpg.group(tag='##items',parent=self.main_window):
-        # with dpg.group(horizontal=True) as row:
-        #     for h in header_btns:
-        #         btn = dpg.add_button(label=h[0],width=h[1],height=25)
-        #         with dpg.tooltip(btn):
-        #             dpg.add_text(h[2])
-        #         # dpg.bind_item_theme(btn,self.themes['muted_theme'])
-        #         if len(h[0]) == 1:
-        #             dpg.bind_item_font(btn,self.large_font)
-
-        # for index,data in enumerate(self.yabus.items()):
-        #     build_row(self,index,data)
         with dpg.table(
             header_row=True,
             resizable=False,
@@ -158,13 +147,11 @@ def build(self):
 
 
             filter_text = dpg.get_value('##filter')
-            # print('filter_text:',filter_text)
 
             if len(filter_text) > 0:
                 dpg.configure_item('##filterbtn',label='')
             else:
                 dpg.configure_item('##filterbtn',label='')
-            # print('type(filter_text):',type(filter_text))
 
             for index,data in enumerate(self.yabus.items()):
                 if filter_text!=None and re.search(filter_text,str(data),re.I) :
@@ -182,22 +169,6 @@ def build_row(self,index:int,data:dict):
         index (int): the index
         data (dict): data
     """
-    # LOGGER.info(f'building {index} {data}')
-    # with dpg.group(horizontal=True,tag=str(index)+'_row') as row:
-        # dpg.add_text(str(data))
-
-    # red_text = None
-    # with dpg.theme() as red_text:
-    #     with dpg.theme_component(dpg.mvAll):
-    #         dpg.add_theme_color(dpg.mvThemeCol_Text,[225,0,0])
-    #     # red_text = red_text
-
-    # green_text = None
-    # with dpg.theme() as green_text:
-    #     with dpg.theme_component(dpg.mvAll):
-    #         dpg.add_theme_color(dpg.mvThemeCol_Text,[0,255,0])
-    #     # green_text = green_text
-
 
     with dpg.table_cell():
         with dpg.group(horizontal=True):
@@ -342,6 +313,15 @@ def build_row(self,index:int,data:dict):
             with dpg.tooltip(lbu_btn):
                 dpg.add_text(misc.time_difference(data['lastbackup']))
 
+def redrive(get_drives):
+
+    dstr = ''
+    for d in get_drives():
+        dstr += f'{d["letter"]} --- {d["label"]} \n'
+    # print(dstr)
+    dpg.configure_item('##drives', default_value=dstr)
+
+
 def main_window(self):
     """creates the item window and manages it
     """
@@ -421,22 +401,6 @@ def main_window(self):
                     # width=-1,
                     # height=-1,
                 )
-
-            # spinnerbtn = dpg.add_button(
-            #     label='',
-            #     tag='##progress_percent0',
-            #     width=124,
-            #     height=25,
-            # )
-            # with dpg.tooltip(spinnerbtn):
-            #     # dpg.add_text(label='',tag='##progress_status')
-            #     dpg.add_button(
-            #         label='',
-            #         tag='##progress_status0',
-            #         width=250,
-            #         height=25,
-            #     )
-
             dpg.add_progress_bar(
                 # label='50/100',
                 tag='##progress_bar0',
@@ -445,6 +409,21 @@ def main_window(self):
                 default_value=0.0,
                 # show=False
             )
+
+        with dpg.tree_node(label='drives',parent=self.main_window):
+            # rdbtn = dpg.add_button(
+            #     label='',
+            #     tag='##re-drive',
+            #     width=25,
+            #     height=25,
+            #     callback=lambda: redrive(self.get_drives)
+            # )
+            # dpg.bind_item_font(rdbtn,self.large_font)
+            dpg.add_text(
+                '',
+                tag = '##drives'
+                )
+            redrive(self.get_drives)
 
         dpg.add_file_dialog(directory_selector=True, show=False, callback=self.change_folder_callback, tag='source'
             ,label = 'source'

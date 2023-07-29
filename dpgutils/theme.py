@@ -656,7 +656,7 @@ def apply_theme(theme_id:int=8):
                     for dpg_id, style in newTheme.styles.items():
                         dpg.add_theme_style(dpg_id, *style, category=dpg.mvThemeCat_Core)
                     for dpg_id, color in newTheme.colors.items():
-                        color = [int(c*0.5) for c in color]
+                        color = [int(c*0.50) for c in color]
                         dpg.add_theme_color(dpg_id, color, category=dpg.mvThemeCat_Core)  
             except Exception as e:
                 print(str(e))

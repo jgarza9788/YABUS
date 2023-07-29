@@ -27,12 +27,14 @@ from dpgutils.menu import menu
 # from dpgutils.items_window import items_window
 import dpgutils.main_window as mw
 from dpgutils.log_window import log_window
+# from dpgutils.drive_window import drive_window
 
 # used for multi threading
 from concurrent.futures import ThreadPoolExecutor
 
 # data manager
 from utils.dataMan import DataManager
+from utils.driveList import get_drives
 
 # logging
 import logging
@@ -58,6 +60,7 @@ class MainWindow():
             print("App Data: ", app_data)
 
             self.yabus.config.data['items'][self.index][sender] = app_data['file_path_name']
+            self.yabus.process_config()
             self.yabus.config.save()
             mw.build(self)
 
@@ -70,6 +73,7 @@ class MainWindow():
         try:
             loglines = self.logStream.getvalue().split('\n')
             loglines.reverse()
+            # loglines = loglines[0:1000]
             dpg.set_value('log_text', '\n'.join(loglines))
             self.rendertime = time.time()
         except:
@@ -149,11 +153,15 @@ class MainWindow():
 
         self.main_window = '##main_window'
         self.log_window = '##log_window'
+        # self.drive_window = '##drive_window'
+
+        self.get_drives = get_drives
 
         menu(self)
         log_window(self)
         # iw.items_window(self)
         mw.main_window(self)
+        # drive_window(self)
 
         # dpg.set_primary_window("##items_window", True)
         dpg.show_viewport()
@@ -170,6 +178,13 @@ class MainWindow():
                 self.update_log()
                 self.update_pb()
                 self.rendertime = time.time()
+                mw.redrive(self.get_drives)
+
+                # if self.drives != get_drives():
+                #     dstr = ''
+                #     for d in self.drives:
+                #         dstr += f'{d["letter"]} : {d["label"]} \n'
+                #     dpg.set_value('##drives', dstr)
 
             dpg.render_dearpygui_frame()
 
@@ -269,6 +284,7 @@ class MainWindow():
             index (int): the item index that will be toggled
         """
         self.yabus.toggle_enable(index)
+        self.yabus.process_config()
         mw.build(self)
 
 
