@@ -289,7 +289,7 @@ class MainWindow():
 
 
 if __name__ == "__main__":
-    MW = MainWindow(verbose=True)
+    MW = MainWindow(verbose=False)
 
 
 
