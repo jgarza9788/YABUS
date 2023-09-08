@@ -78,10 +78,29 @@ class YABUS_Textualize(App):
 
     CSS_PATH = "textualize\style.css"
 
+    BINDINGS = [
+        # ("a", "add", "Add tab"),
+        # ("r", "remove", "Remove active tab"),
+        # ("c", "clear", "Clear tabs"),
+        ("ctrl+q","app.quit","Quit"),
+        ("ctrl+t", "app.toggle_dark", "Toggle Dark mode"),
+        # ("ctrl+s", "app.screenshot()", "Screenshot"),
+        ("f1", "app.toggle_class('RichLog', '-hidden')", "Notes"),
+        Binding("ctrl+q", "app.quit", "Quit", show=True),
+    ]
+
+    def add_note(self, renderable: RenderableType) -> None:
+        self.query_one(RichLog).write(renderable)
+
     def __init__(self, driver_class: type[Driver] | None = None, css_path: CSSPathType | None = None, watch_css: bool = False):
         super().__init__(driver_class, css_path, watch_css)
 
         self.yabus = YABUS()
+
+    def format_lastbackup(self,lastbackup:str):
+        if lastbackup == None:
+            return 'None'
+        return lastbackup[0:4] + '.' + lastbackup[4:6] + '.' + lastbackup[6:8] + ' | ' + lastbackup[8:10] + ':' + lastbackup[10:12]
 
     def compose(self) -> ComposeResult:
         # yield HorizontalScroll(
@@ -89,29 +108,34 @@ class YABUS_Textualize(App):
         #     *[Checkbox("hello")],
         #     id="main_container"
         # )
-        with VerticalScroll():
-            with HorizontalScroll():
-                yield Label("Hello, world!")
-            for index,i in enumerate(self.yabus.items()):
-                with HorizontalScroll():
-                    yield Checkbox('',i['enable'])
-                    # yield Checkbox('runable',i['runable'])
-                    yield Label( "🟢True" if i['runable'] else "🔴False")
-                    # yield Checkbox(str(i['enable']),i['enable'])
-                    # yield Checkbox(str(i['enable']),i['enable'])
-            # yield [Checkbox("one"),Checkbox("two"),Checkbox("three")]
-            # yield Checkbox("Arrakis :sweat:")
-            # yield Checkbox("Caladan")
-            # yield Checkbox("Chusuk")
-            # yield Checkbox("[b]Giedi Prime[/b]")
-            # yield Checkbox("[magenta]Ginaz[/]")
-            # yield Checkbox("Grumman", True)
-            # yield Checkbox("Kaitain", id="initial_focus")
-            # yield Checkbox("Novebruns", True)
+
+        # with VerticalScroll():
+        #     with HorizontalScroll():
+        #         yield Label("Hello, world!")
+        #     for index,i in enumerate(self.yabus.items()):
+        #         with HorizontalScroll():
+        #             yield Checkbox('',i['enable'])
+        #             yield Label("🟢" if i['runable'] else "🔴",id="runable")
+        #             yield Input(value=i['source'],placeholder="source")
+        #             yield Input(value=i['root_dest'],placeholder="root_dest")
+        #             yield Input(value=i['ex_reg'],placeholder="ex_reg")
+        #             yield Label(self.format_lastbackup(i['lastbackup']),id="lastbackup")
+        yield Container(
+            RichLog(classes="-hidden", wrap=False, highlight=True, markup=True,id="notes"),
+        )
+        yield Footer()
 
     def on_mount(self):
         # self.query_one("#initial_focus", Checkbox).focus()
         pass
+
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+        print(
+            event.checkbox.id, event.checkbox.value, event.checkbox == event.control
+        )
+        # self.events_received.append(
+        #     (event.checkbox.id, event.checkbox.value, event.checkbox == event.control)
+        # )
 
 
 if __name__ == "__main__":

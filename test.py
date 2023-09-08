@@ -96,7 +96,8 @@ def checks():
         for filename in filenames:
             filelist.append(os.path.join(dirpath,filename))
     
-    assert len(filelist) == 2, 'should archive 2 files'
+    print(*filelist,sep='\n')
+    assert len(filelist) == 4, 'should archive 4 files'
 
     # make sure the backup matches the original
     with open('.\\test\\A\\Two.json','r') as fileA:
