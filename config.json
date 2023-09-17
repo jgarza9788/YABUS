@@ -94,11 +94,11 @@
             source: "D:\\PSDs",
             root_dest: "C:\\Users\\JGarza\\Desktop",
             ex_reg: "",
-            lastbackup: "202309162338",
+            lastbackup: "202309171012",
             enable: true,
             runable: true,
             dest: "C:\\Users\\JGarza\\Desktop\\PSDs",
-            archive_dir: "C:\\Users\\JGarza\\Desktop\\PSDs\\.archive\\202309162338",
+            archive_dir: "C:\\Users\\JGarza\\Desktop\\PSDs\\.archive\\202309171012",
         },
     ],
 }

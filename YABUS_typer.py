@@ -4,13 +4,13 @@ from rich import print
 
 from typing import Union
 
-import os
+import os,re
 import json5 as json
 import pandas as pd
 
 # data manager
 from utils.dataMan import DataManager
-from utils.driveList import get_drives
+from utils.driveList import get_drives,get_drivedata_details
 
 # logging
 import logging
@@ -170,41 +170,82 @@ def delete_item(index:str):
 
 @app.command()
 def delete(index:str):
+    """deletes an item
+    """
     delete_item(index)
 
 @app.command()
 def remove(index:str):
+    """deletes an item
+    """
     delete_item(index)
 
 @app.command()
 def run_all():
+    """runs all enabled and runable items"""
     try:
         yabus.backup()
         process_config()
+        log_summary()
         show()
     except Exception as e:
         print(e)
 
 @app.command()
 def run_one(index:int):
+    """runs one item, must be enabled and runable"""
     try:
         yabus.backup_One(index)
         process_config()
+        log_summary()
         show()
     except Exception as e:
         print(e)
 
 @app.command()
-def show_log(lines:str="50"):
-    lines = int(lines)
+def run():
+    """runs all enabled and runable items"""
+    run_all()
+
+def log_summary():
+    """shows the log summary"""
     log_text = logStream.getvalue().split('\n')
-    log_text.reverse()
-    log_text = log_text[0:lines]
-    print(*log_text,sep='\n')
+    llist = ['Files to Process:',
+    'remove_dest Files:',
+    'Archive Files:',
+    'BackUp Files:',
+    'Skipped Files:',
+    'Files in Cache:'
+    ]
+
+    result = []
+    for i in log_text:
+        for j in llist:
+            if j in i:
+                result.append(i)
+    print('')
+    print(*result,sep='\n')
+    print('')
+
+    # log_text.reverse()
+    # print(*log_text,sep='\n')
 
 @app.command()
 def drives():
-    print(*get_drives(),sep='\n')
+    """prints the drives"""
+    # print(*get_drives(),sep='\n')
+    # print(*get_drivedata_details(),sep='\n')
+
+    for d in get_drivedata_details():
+        if d.get('volumename','') == '':
+            print(d['letter'])
+        else:
+            print(d['letter'],'(',d.get('volumename',''),')')
+        print(f"{d['used_round']} GB / {d['size_round']} GB")
+        print(f"{d['percent_used']}%")
+        fillstr = ('#'* int(d['percent_used'] * (50/100))).ljust(50,'-')
+        print( '[',fillstr , ']','\n')
+
 
 if __name__ == "__main__":
     os.system('cls')

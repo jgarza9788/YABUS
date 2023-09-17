@@ -418,7 +418,7 @@ class YABUS():
         # print(sc.head(10))
         # print(sc.dtypes)
 
-        self.logger.info(f'Files to Process {len(sc)}')
+        self.logger.info(f'Files to Process: {len(sc)}')
 
         # if len(sc[sc.backup == True]) == 0 and \
         #     len(sc[sc.archive == True]) == 0 and \
