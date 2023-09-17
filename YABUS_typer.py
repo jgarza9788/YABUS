@@ -1,12 +1,15 @@
 import typer
 app = typer.Typer()
 from rich import print
+# from rich.text import Text
 
 from typing import Union
 
 import os,re
 import json5 as json
 import pandas as pd
+
+import nerdfonts as nf
 
 # data manager
 from utils.dataMan import DataManager
@@ -28,27 +31,36 @@ logStream = StringIO()
 
 logger = createLogger(
     root=os.path.join(DIR,'log'),
-    useStreamHandler=True,
+    useStreamHandler=False,
     strIO=logStream,
     )
 
 # init YABUS obj
 yabus = YABUS(
             config_dir = os.path.join(DIR,'config.json'),
-            verbose= True,
+            verbose= False,
             logger = logger
             )
 
 
 def process_config():
     yabus.process_config()
-    os.system('cls')
+    # os.system('cls')
 
 def format_lastbackup(lastbackup:str):
     if lastbackup == None:
         return 'None'
     return lastbackup[0:4] + '.' + lastbackup[4:6] + '.' + lastbackup[6:8] + ' | ' + lastbackup[8:10] + ':' + lastbackup[10:12]
 
+def format_bool(value:str):
+    value = str(value).lower()
+    if value in ['y','yes','1','true']:
+        # return Text().append(nf.icons['fa_check'],style="green")
+        return '[X]'
+    else:
+        return '[ ]'
+        # return Text().append(nf.icons['fa_close'],style="red")
+        # return nf.icons['fa_close']
 
 def change_data(index:str,name:str,value):
     errors = []
@@ -66,6 +78,8 @@ def show():
     """
     df = pd.DataFrame(yabus.config.data['items'])
     df['lastbackup'] = df['lastbackup'].apply(format_lastbackup)
+    df['enable'] = df['enable'].apply(format_bool)
+    df['runable'] = df['runable'].apply(format_bool)
     df = df[['enable','runable','source','root_dest','ex_reg','lastbackup']]
     print(df)
 
@@ -139,7 +153,6 @@ def new_item():
     """
     try:
         yabus.add_new_item()
-        show()
     except Exception as e:
         logger.debug(e)
         print(e)
@@ -207,6 +220,21 @@ def run():
     """runs all enabled and runable items"""
     run_all()
 
+@app.command()
+def run_obo():
+    """runs all - but one by one"""
+    for index,i in enumerate(yabus.items()):
+        try:
+            print(f"running {index} | {i['source']} --> {i['dest']}")
+            yabus.backup_One(index)
+            log_summary()
+            print()
+        except Exception as e:
+            print(e)
+    process_config()        
+    show()
+
+
 def log_summary():
     """shows the log summary"""
     log_text = logStream.getvalue().split('\n')
@@ -223,9 +251,7 @@ def log_summary():
         for j in llist:
             if j in i:
                 result.append(i)
-    print('')
     print(*result,sep='\n')
-    print('')
 
     # log_text.reverse()
     # print(*log_text,sep='\n')
@@ -248,5 +274,4 @@ def drives():
 
 
 if __name__ == "__main__":
-    os.system('cls')
     app()
