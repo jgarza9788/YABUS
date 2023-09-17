@@ -44,7 +44,6 @@ from YABUS import YABUS
 
 yabus = YABUS(logger=logger)
 
-
 # building the GUI
 
 
@@ -98,16 +97,16 @@ def remove_item(index:int):
     ui.notify(f'removed {index}',position='top-right')
 
 def run_all():
-    # yabus.process_config()
-    # yabus_items_ui.refresh()
+    ui.notify('running all items',position='top-right',)
     yabus.backup()
-    ui.notify('running all items',position='top-right')
+    ui.notify('done all items',position='top-right')
 
 def run_one(index:int):
+    ui.notify(f'running {index}',position='top-right')
     yabus.backup_One(index)
 
     yabus_items_ui.refresh()
-    ui.notify(f'running {index}',position='top-right')
+    ui.notify(f'done {index}',position='top-right')
     yabus_items_ui.refresh()
 
 def toggle_enable(index:int):
@@ -130,9 +129,10 @@ black_text = Tailwind().text_color('black')
 
 
 def create_row(index:int, item):
-    with ui.row().style('height: 5rem; padding: auto'):
-        ui.label(f'{index:03d}').style('height: 100%; line-height:5rem; text-align: center;')
-        ui.label("⬛" if item['runable'] == True else "⚠️").style('height: 100%; line-height:5rem; text-align: center;')
+    # with ui.card().tight():
+    with ui.row().style('height: 4rem; padding: auto'):
+        ui.label(f'{index:03d}').style('height: 100%; line-height:4rem; text-align: center;')
+        ui.label("⬛" if item['runable'] == True else "⚠️").style('height: 100%; line-height:4rem; text-align: center;')
         ui.checkbox('',value=item['enable'],on_change=lambda: toggle_enable(index)).style('height: 100%')
 
         btn_run = ui.button('▶️',color='none',on_click=lambda: run_one(index))
@@ -149,7 +149,7 @@ def create_row(index:int, item):
         # rd.on_value_change(lambda: yabus_items_ui.refresh())
 
         ui.input(label='ex_reg', value=item['ex_reg'] ).style('width: 10rem; height: 100%')
-        ui.label(f'{format_lastbackup(item["lastbackup"])}').style('width: 10rem; height: 100%; line-height:5rem; text-align: center;')
+        ui.label(f'{format_lastbackup(item["lastbackup"])}').style('width: 10rem; height: 100%; line-height:4rem; text-align: center;')
         ui.button('❌',color='none',on_click=lambda: remove_item(index)).style('height: 100%')
 
 @ui.refreshable
@@ -157,24 +157,29 @@ def yabus_items_ui():
     yabus.process_config()
     for index,item in enumerate(yabus.items()):
         create_row(index,item)
-        ui.splitter(horizontal=True)
+        # ui.splitter(horizontal=True)
     ui.notify('refreshed',position='top-right')
-    log_md_ui.refresh()
+    log_ui.refresh()
 
 @ui.refreshable
-def log_md_ui():
+def log_ui():
+    ui.button('refresh log',color='none',on_click=lambda: log_ui.refresh())
+
     lst = logStream.getvalue().split('\n')
-    ui.markdown('\n\n'.join(lst[-300:]))
-    # TA = ui.textarea(value=logStream.getvalue())
-    # TA.style('overflow: visible')
+    lst.reverse()
+
+    log_text = ui.log(max_lines=300).classes('w-full')
+    log_text.style('height: 75rem;')
+    for i in lst:
+        log_text.push(i)
 
 
 with ui.tabs().classes('w-full,items-start') as tabs:
-    main_ui = ui.tab('Main')
-    log_ui = ui.tab('Log')
-    about_ui = ui.tab('About')
-with ui.tab_panels(tabs, value=main_ui).classes('w-full'):
-    with ui.tab_panel(main_ui):
+    main_tab_ui = ui.tab('Main')
+    log_tab_ui = ui.tab('Log')
+    about_tab_ui = ui.tab('About')
+with ui.tab_panels(tabs, value=main_tab_ui).classes('w-full'):
+    with ui.tab_panel(main_tab_ui):
         # ui.label('First tab')
         # btn = 
         # ui.button('+ Item', on_click=lambda: add_item()).classes('bg-indigo-950',remove='bg_primary')
@@ -193,9 +198,9 @@ with ui.tab_panels(tabs, value=main_ui).classes('w-full'):
 
 
 
-    with ui.tab_panel(log_ui):
-        log_md_ui()
-    with ui.tab_panel(about_ui):
+    with ui.tab_panel(log_tab_ui):
+        log_ui()
+    with ui.tab_panel(about_tab_ui):
         ui.markdown(about_md)
 
 
