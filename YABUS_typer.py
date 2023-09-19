@@ -84,16 +84,19 @@ def show():
     print(df)
 
 @app.command()
-def toggle_enable(index):
+def toggle_enable(indexes:str):
     """toggles the enable flag
 
     Args:
-        index (_type_): the index(s) to toggle
+        indexes (str): a string of numbers separated by a comma
+    
+    Example:
+        python YABUS_typer.py toggle-enable 0,1,2
     """
     # print(index)
     # print(type(index))
     errors = []
-    for i in index.split(','):
+    for i in indexes.split(','):
         try:
             yabus.toggle_enable(index=int(i))
         except Exception as e:
@@ -104,44 +107,81 @@ def toggle_enable(index):
     show()
 
 @app.command()
-def source(index:str,new_source:str):
+def enable(indexes:str):
+    """enable the ones in the index, and disables others
+
+    Args:
+        indexes (str): a string of numbers separated by a comma
+
+    Example:
+        python YABUS_typer.py enable 0,1,2
+    """
+    # print(index)
+    # print(type(index))
+
+    errors = []
+    ilist = indexes.split(',')
+    for index,i in enumerate(yabus.items()):
+        try:
+            if str(index) in ilist:
+                yabus.config.data['items'][int(index)]['enable'] = True
+            else:
+                yabus.config.data['items'][int(index)]['enable'] = False
+        except Exception as e:
+            logger.debug(e)
+            errors.append({"index":i,"message":e})
+
+    process_config()
+    print(*errors,sep='\n')
+    show()
+
+@app.command()
+def source(indexes:str,new_source:str):
     """change the source
 
     Args:
-        index (str): index(s) to change
+        indexes (str): index(s) to change
         new_source (str): new value
+
+    Example:
+        python YABUS_typer.py source 0,1,2 C:\\
     """
 
-    errors = change_data(index,'source',new_source)    
+    errors = change_data(indexes,'source',new_source)    
     yabus.config.save()
     process_config()
     print(*errors,sep='\n')
     show()
 
-
 @app.command()
-def root_dest(index:str,new_root_dest:str):
+def root_dest(indexes:str,new_root_dest:str):
     """change the root_dest
 
     Args:
-        index (str): index(s) to change
+        indexes (str): index(s) to change
         new_root_dest (str): new value
+
+    Example:
+        python YABUS_typer.py root-dest 0,1,2 C:\\
     """
-    errors = change_data(index,'root_dest',new_root_dest)    
+    errors = change_data(indexes,'root_dest',new_root_dest)    
     yabus.config.save()
     process_config()
     print(*errors,sep='\n')
     show()
 
 @app.command()
-def ex_reg(index:str,new_ex_reg:str):
-    """change the ex_reg
+def ex_reg(indexes:str,new_ex_reg:str):
+    """change the ex_reg, this is used to exclude any file that matches this regex pattern
 
     Args:
-        index (str): index(s) to change
+        indexes (str): index(s) to change
         new_ex_reg (str): new value
+
+    Example:
+        python YABUS_typer.py ex-reg 0,1,2 .git
     """
-    errors = change_data(index,'ex_reg',new_ex_reg)    
+    errors = change_data(indexes,'ex_reg',new_ex_reg)    
     yabus.config.save()
     process_config()
     print(*errors,sep='\n')
@@ -166,14 +206,14 @@ def add():
     new_item()
 
 @app.command()
-def delete_item(index:str):
+def delete_item(indexes:str):
     """deletes an item
     """
 
-    index = [int(i) for i in index.split(',')]
-    index.sort(reverse=True)
+    indexes = [int(i) for i in indexes.split(',')]
+    indexes.sort(reverse=True)
 
-    for i in index:
+    for i in indexes:
         try:
             yabus.remove_One(int(i))
         except Exception as e:
@@ -182,16 +222,16 @@ def delete_item(index:str):
     show()
 
 @app.command()
-def delete(index:str):
+def delete(indexes:str):
     """deletes an item
     """
-    delete_item(index)
+    delete_item(indexes)
 
 @app.command()
-def remove(index:str):
+def remove(indexes:str):
     """deletes an item
     """
-    delete_item(index)
+    delete_item(indexes)
 
 @app.command()
 def run_all():
@@ -247,7 +287,7 @@ def log_summary():
     ]
 
     result = []
-    for i in log_text:
+    for i in log_text[-6:]:
         for j in llist:
             if j in i:
                 result.append(i)
