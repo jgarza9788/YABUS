@@ -15,9 +15,9 @@ __status__ = "Development"
 
 
 import os,datetime,pathlib
-import json5 as jason
+import json5 as json
 import pandas as pd
-
+import subprocess as sp
 
 import shutil
 
@@ -330,6 +330,159 @@ class YABUS():
         self.logger.info(f'scan_cache size: {len(self.scan_cache)}')
         self.logger.info('end')
 
+    def scan_v2(self,filter_index:int=None):
+        """
+        scan, but using powershell - this is a work in progress, see scratch_00.py to test
+        errors out due to bringing back partical data, probally due to buffer size.
+        saving to a file might work? ... will try later ... maybe
+        """
+
+        self.logger.warning("!"*10)
+        self.logger.warning("needs more testing do not use")
+        self.logger.warning("!"*10)
+
+
+        self.logger.info('Scanning Start ...')
+
+        self.progress_numerator = 1 
+        self.progress_denominator = 100
+        self.progress_status = 'Scan'
+
+        self.scan_cache = pd.DataFrame()
+        self.logger.info('scan_cache - cleared')
+
+        items = self.items()
+
+        self.progress_denominator = len(items)
+        self.progress_numerator = 0
+
+        # filter for only specifc indexes
+        if filter_index != None:
+            try:
+                items = [items[filter_index]]
+            except Exception as e:
+                self.logger.error(str(e))
+
+        total_files_found = 0 
+        df_source = pd.DataFrame()
+        df_dest = pd.DataFrame()
+        for index,item in enumerate(items):
+            self.progress_numerator += 1
+
+            if item['runable'] == False:
+                continue
+            if item['enable'] == False:
+                continue
+
+            
+            cmd = ["pwsh",".\\utils\\get_files.ps1", f"{item['source']}" ,f"\"{item['ex_reg']}\""]
+            cmd = " ".join(cmd)
+
+            pipe = sp.Popen(cmd,shell=False,stdout=sp.PIPE,stderr=sp.PIPE)   
+            stdout, stderr = pipe.communicate()
+
+            if pipe.returncode != 0:
+                self.logger.error(str(stderr))
+
+            stdout = str(stdout)[2::]
+            stdout = stdout.replace('\\r\\n','')
+            stdout = stdout[:-2]
+            stdout = '[' + stdout + ']'
+            dfs = pd.DataFrame(json.loads(stdout))
+            df_source = pd.concat([df_source,dfs])
+
+            cmd = ["pwsh",".\\utils\\get_files.ps1", f"{item['dest']}" ,f"\"{item['ex_reg']}\""]
+            cmd = " ".join(cmd)
+
+            pipe = sp.Popen(cmd,shell=False,stdout=sp.PIPE,stderr=sp.PIPE)   
+            stdout, stderr = pipe.communicate()
+
+            if pipe.returncode != 0:
+                self.logger.error(str(stderr))
+
+            stdout = str(stdout)[2::]
+            stdout = stdout.replace('\\r\\n','')
+            stdout = stdout[:-2]
+            stdout = '[' + stdout + ']'
+            dfd = pd.DataFrame(json.loads(stdout))
+            df_dest = pd.concat([df_dest,dfd])
+
+
+
+
+        total_files_found += len(df_source)
+        total_files_found += len(df_dest)
+
+        # print(total_files_found)
+
+        if len(df_source) + len(df_dest) == 0 :
+            self.scan_cache = pd.concat([self.scan_cache,pd.DataFrame()])
+            return
+
+        # must have specific columns
+        columns = [
+            'relpath',
+            'fullpath',
+            'filename',
+            'size',
+            'modified',
+            'rootpath'
+        ]
+
+        for col in columns:
+            if col not in df_source.columns:
+                df_source[col] = None
+            if col not in df_dest.columns:
+                df_dest[col] = None
+
+        df = pd.merge(df_source,df_dest,how='outer',on='relpath')
+        df.fillna(0)
+
+        df['index'] = index
+        if filter_index != None:
+            df['index'] = filter_index
+
+        df['archive_dir'] = item['archive_dir']
+        # df['options'] = item.get('options','')
+        df['rootpath_y'] = item['dest']
+
+        df['skip'] =  False
+        if len(item.get('ex_reg','')) > 0:
+            df.loc[ (df['fullpath_x'].isna() == False ) & (df['fullpath_x'].str.contains(item['ex_reg'],regex=True)) ,'skip'] = True
+        #these just need to automatically be skipped
+        ## (?:desktop\.ini|Thumbs\.db)$
+        # df.loc[ (df['fullpath_x'].isna() == False ) & (df['fullpath_x'].str.contains(r'(?:desktop\.ini|Thumbs\.db)$',regex=True)) ,'skip'] = True
+
+        df['remove_dest'] = False
+        # if not in source, but in destination... remove from destination
+        df.loc[ ((df['fullpath_x'].isna() ) & (df['fullpath_y'].isna() == False)) ,'remove_dest'] = True
+        
+        df['backup'] =  False
+        # if the size and modified is different, back up 
+        df.loc[ ((df['size_x'] != df['size_y']) | ( abs(df['modified_y'] - df['modified_x']) > 2.0 )) ,'backup'] = True
+        #if not in source... we can't back it up
+        df.loc[ df['fullpath_x'].isna() ,'backup'] = False 
+
+        df['archive'] =  False
+        # if backup is true, and destination is not null, archive it
+        df.loc[ ((df['fullpath_x'].isna() == True) & (df['fullpath_y'].isna() == False)) ,'archive'] = True
+        df.loc[ ((df['backup'] == True) & (df['fullpath_x'].isna() == False) & (df['fullpath_y'].isna() == False)) ,'archive'] = True
+                
+        self.scan_cache = pd.concat([self.scan_cache,df])
+        # print('scan: ',self.bar(len(self.scan_cache),len(self.items())),end='\r')
+        
+        if self.verbose == True:
+            self.logger.info('\t'+ self.scan_cache.to_string().replace('\n', '\n\t')) 
+        else:
+            self.logger.info(f'scan_cache length {len(self.scan_cache)}')
+
+        
+        self.progress_numerator = 1 
+        self.progress_denominator = 1
+
+        self.logger.info(f'scan_cache size: {len(self.scan_cache)}')
+        self.logger.info('end')
+
     def _backup(self,row:dict) -> dict:
         """perform all the actions for backup one row of data
 
@@ -402,6 +555,7 @@ class YABUS():
         if len(self.scan_cache) == 0:
             self.logger.info('no scan_cache detected')
             self.scan()
+            # self.scan_v2()
 
         sc = self.scan_cache.copy().fillna(0)
 
@@ -534,6 +688,7 @@ class YABUS():
             self.logger.info(f'only backing up one: {self.items()[index]}')
             self.clear_scan_cache()
             self.scan(index)
+            # self.scan_v2(index)
             if len(self.scan_cache) > 0:
                 self.backup()
         except Exception as e:

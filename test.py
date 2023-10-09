@@ -1,7 +1,17 @@
 import os,time
+import pandas as pd
 import shutil
 import json5 as json
 from utils.dataMan import DataManager
+
+DIR = os.path.dirname(os.path.realpath(__file__))
+
+
+## Pandas Options
+# show all the columns and rows
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
 
 from YABUS import YABUS
 
@@ -83,7 +93,7 @@ def checks():
             '.\\test\\A\\A2\\Atwo.json',
             '.\\test\\B\\A\\One.json',
             '.\\test\\B\\A\\Two.json',
-            '.\\test\\B\\A\\\\A2\\Atwo.json',
+            '.\\test\\B\\A\\A2\\Atwo.json',
         ]
 
     for f in filelist:
@@ -106,15 +116,135 @@ def checks():
 
     print('please see errors above, if any')
 
-if __name__ == '__main__':
+
+def scan_test():
+    """perform a yabus.scan()"""
     clean()
     prepare_files()
-    run_yabus()
-    time.sleep(5)
-    mod_files()
-    run_yabus_2()
-    checks()
+    dir = os.path.dirname(os.path.realpath(__file__))
+    source = os.path.join(dir,'test','A')
+    root_dest = os.path.join(dir,'test','B')
+    
+    data = {
+        "items":[
+        {
+            "source": source,"root_dest": root_dest
+        }
+        ]
+    }
+
+    config = DataManager('.\\test\\config.json',default=data)
+    yabus = YABUS(config_dir=config.file_dir,verbose=False)
+
+    yabus.clear_scan_cache()
+    yabus.scan()
+
+    print(*yabus.scan_cache.columns,sep='\n')
+    yabus.scan_cache.to_csv(os.path.join(DIR,'cache.csv'))
+
+def scan_v2_test():
+    """perform a yabus.scan()"""
     clean()
+    prepare_files()
+    dir = os.path.dirname(os.path.realpath(__file__))
+    source = os.path.join(dir,'test','A')
+    root_dest = os.path.join(dir,'test','B')
+    
+    data = {
+        "items":[
+        {
+            "source": source,"root_dest": root_dest
+        }
+        ]
+    }
+
+    config = DataManager('.\\test\\config.json',default=data)
+    yabus = YABUS(config_dir=config.file_dir,verbose=True)
+
+    yabus.process_config()
+    print(yabus.items())
+    yabus.clear_scan_cache()
+    yabus.scan_v2()
+
+    print(*yabus.scan_cache.columns,sep='\n')
+    print(yabus.scan_cache)
+
+    # yabus.backup()
+
+    yabus.clear_scan_cache()
+    yabus.scan_v2()
+
+    # print(*yabus.scan_cache.columns,sep='\n')
+    # print(yabus.scan_cache)
+    yabus.scan_cache.to_csv(os.path.join(DIR,'cache_v2.csv'))
+
+    yabus.clear_scan_cache()
+    yabus.scan()
+
+    # print(*yabus.scan_cache.columns,sep='\n')
+    # print(yabus.scan_cache)
+    yabus.scan_cache.to_csv(os.path.join(DIR,'cache.csv'))
+
+
+def scan_speed():
+    clean()
+    prepare_files()
+    t = time.time()
+    # data = {
+    #     "items":[
+    #     {
+    #         "source": r"C:\Users\JGarza\GitHub\YABUS",
+    #         "root_dest": r"C:\Users\JGarza\Desktop"
+    #     }
+    #     ]
+    # }
+
+    data = {
+        "items":[
+        {
+            "source": r"D:\UnityProjects",
+            "root_dest": r"C:\Users\JGarza\Desktop"
+        }
+        ]
+    }
+
+    config = DataManager('.\\test\\config.json',default=data)
+    yabus = YABUS(config_dir=config.file_dir,verbose=False)
+
+    yabus.clear_scan_cache()
+    t = time.time()
+    yabus.scan()
+    yabus.logger.info(f"v1 {time.time() -t}")
+    print(f"v1 {time.time() -t}")
+
+    # yabus.clear_scan_cache()
+    # t = time.time()
+    # yabus.scan_v2()
+    # yabus.logger.info(f"v2 {time.time() -t}")
+    # print(f"v2 {time.time() -t}")
+
+
+if __name__ == '__main__':
+    # clean()
+    # prepare_files()
+    # run_yabus()
+    # time.sleep(5)
+    # mod_files()
+    # run_yabus_2()
+    # checks()
+    # clean()
+
+    # scan_test()
+    # clean()
+    # scan_v2_test()
+    # checks()
+
+    scan_speed()
+
+    # import pandas as pd
+    # import json5 as json
+    # df = pd.DataFrame(json.loads('[{"one":1,},]'))
+    # print(df)
 
 
     

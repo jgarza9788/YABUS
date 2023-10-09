@@ -13,7 +13,7 @@
         {
             source: "D:\\UnityProjects",
             root_dest: "E:\\",
-            ex_reg: "(\.git|\.bin|\\Library\\|\\PackageCache\\|\\ShaderCache\\)",
+            ex_reg: ".git",
             lastbackup: "202309282108",
             enable: false,
             dest: "E:\\UnityProjects",
