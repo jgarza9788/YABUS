@@ -225,26 +225,15 @@ def scan_speed():
 
 
 if __name__ == '__main__':
-    # clean()
-    # prepare_files()
-    # run_yabus()
-    # time.sleep(5)
-    # mod_files()
-    # run_yabus_2()
-    # checks()
-    # clean()
+    clean()
+    prepare_files()
+    run_yabus()
+    time.sleep(5)
+    mod_files()
+    run_yabus_2()
+    checks()
+    clean()
 
-    # scan_test()
-    # clean()
-    # scan_v2_test()
-    # checks()
-
-    scan_speed()
-
-    # import pandas as pd
-    # import json5 as json
-    # df = pd.DataFrame(json.loads('[{"one":1,},]'))
-    # print(df)
 
 
     
