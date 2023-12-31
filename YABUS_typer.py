@@ -277,7 +277,8 @@ def run_obo():
 
 def log_summary():
     """shows the log summary"""
-    log_text = logStream.getvalue().split('\n')
+    log_text = logStream.getvalue().split('\n')[0:100]
+    log_text.reverse()
     llist = ['Files to Process:',
     'remove_dest Files:',
     'Archive Files:',
@@ -287,14 +288,16 @@ def log_summary():
     ]
 
     result = []
-    for i in log_text[-6:]:
+    
+    for i in log_text:
         for j in llist:
             if j in i:
                 result.append(i)
+                continue
+        if len(result) == len(llist):
+            continue
+    result = result[0:len(llist)]
     print(*result,sep='\n')
-
-    # log_text.reverse()
-    # print(*log_text,sep='\n')
 
 @app.command()
 def drives():
@@ -315,3 +318,4 @@ def drives():
 
 if __name__ == "__main__":
     app()
+
