@@ -35,6 +35,7 @@ from concurrent.futures import ThreadPoolExecutor
 # data manager
 from utils.dataMan import DataManager
 from utils.driveList import get_drives
+from utils.driveList import get_drivedata_details
 
 # logging
 import logging
@@ -59,7 +60,18 @@ class MainWindow():
             print("Sender: ", sender)
             print("App Data: ", app_data)
 
-            self.yabus.config.data['items'][self.index][sender] = app_data['file_path_name']
+            
+            # print(app_data['file_path_name'])
+
+            new_path = app_data['file_path_name']
+            if (new_path.startswith("\\")):
+                new_path = new_path[1::]
+            if len(new_path) == 2:
+                new_path += "\\"
+
+            # print(new_path)
+
+            self.yabus.config.data['items'][self.index][sender] = new_path
             self.yabus.process_config()
             self.yabus.config.save()
             mw.build(self)
@@ -155,7 +167,7 @@ class MainWindow():
         self.log_window = '##log_window'
         # self.drive_window = '##drive_window'
 
-        self.get_drives = get_drives
+        self.get_drives = get_drivedata_details
 
         menu(self)
         log_window(self)

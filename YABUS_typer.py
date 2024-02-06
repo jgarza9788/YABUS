@@ -239,7 +239,7 @@ def run_all():
     try:
         yabus.backup()
         process_config()
-        log_summary()
+        # log_summary()
         show()
     except Exception as e:
         print(e)
@@ -250,7 +250,7 @@ def run_one(index:int):
     try:
         yabus.backup_One(index)
         process_config()
-        log_summary()
+        # log_summary()
         show()
     except Exception as e:
         print(e)
@@ -267,7 +267,7 @@ def run_obo():
         try:
             print(f"running {index} | {i['source']} --> {i['dest']}")
             yabus.backup_One(index)
-            log_summary()
+            # log_summary()
             print()
         except Exception as e:
             print(e)
@@ -275,29 +275,29 @@ def run_obo():
     show()
 
 
-def log_summary():
-    """shows the log summary"""
-    log_text = logStream.getvalue().split('\n')[0:100]
-    log_text.reverse()
-    llist = ['Files to Process:',
-    'remove_dest Files:',
-    'Archive Files:',
-    'BackUp Files:',
-    'Skipped Files:',
-    'Files in Cache:'
-    ]
+# def log_summary():
+#     """shows the log summary"""
+#     log_text = logStream.getvalue().split('\n')[0:100]
+#     log_text.reverse()
+#     llist = ['Files to Process:',
+#     'remove_dest Files:',
+#     'Archive Files:',
+#     'BackUp Files:',
+#     'Skipped Files:',
+#     'Files in Cache:'
+#     ]
 
-    result = []
+#     result = []
     
-    for i in log_text:
-        for j in llist:
-            if j in i:
-                result.append(i)
-                continue
-        if len(result) == len(llist):
-            continue
-    result = result[0:len(llist)]
-    print(*result,sep='\n')
+#     for i in log_text:
+#         for j in llist:
+#             if j in i:
+#                 result.append(i)
+#                 continue
+#         if len(result) == len(llist):
+#             continue
+#     result = result[0:len(llist)]
+#     print(*result,sep='\n')
 
 @app.command()
 def drives():

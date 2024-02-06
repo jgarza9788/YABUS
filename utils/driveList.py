@@ -76,4 +76,5 @@ def get_drivedata_details():
 
 if __name__ == '__main__':
 
-    print(*get_drives(),sep='\n')
+    # print(*get_drives(),sep='\n')
+    print(*get_drivedata_details(),sep='\n')

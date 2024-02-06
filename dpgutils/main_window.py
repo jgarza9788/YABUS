@@ -313,11 +313,11 @@ def build_row(self,index:int,data:dict):
             with dpg.tooltip(lbu_btn):
                 dpg.add_text(misc.time_difference(data['lastbackup']))
 
-def redrive(get_drives):
+def redrive(get_drivedata):
 
     dstr = ''
-    for d in get_drives():
-        dstr += f'{d["letter"]} --- {d["label"]} \n'
+    for d in get_drivedata():
+        dstr += f'{d["letter"]} | {d.get("volumename"," "*12)} --- {d["percent_used"]}%     {d["used_round"]}GB / {d["size_round"]}GB \n'
     # print(dstr)
     dpg.configure_item('##drives', default_value=dstr)
 

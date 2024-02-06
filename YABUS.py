@@ -565,6 +565,12 @@ class YABUS():
         self.logger.info(f'Archive Files: {len(sc[sc.archive == True])}')
         self.logger.info(f'remove_dest Files: {len(sc[sc.remove_dest == True])}')
 
+        print(f'Files in Cache:     {len(sc)}')
+        print(f'Skipped Files:      {len(sc[sc.skip == True])}')
+        print(f'BackUp Files:       {len(sc[sc.backup == True])}')
+        print(f'Archive Files:      {len(sc[sc.archive == True])}')
+        print(f'remove_dest Files:  {len(sc[sc.remove_dest == True])}')
+
         sc = sc[ (sc['archive'] == True) | (sc['backup'] == True) | (sc['remove_dest'] == True) ]
         sc = sc[sc.skip == False]
 
