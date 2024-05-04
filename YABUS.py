@@ -258,6 +258,9 @@ class YABUS():
             total_files_found += len(df_dest)
             print(f' Files Found {total_files_found}',end='\r')
 
+            if total_files_found == 0:
+                print()
+
             if len(df_source) + len(df_dest) == 0 :
                 self.scan_cache = pd.concat([self.scan_cache,pd.DataFrame()])
                 continue
@@ -565,11 +568,18 @@ class YABUS():
         self.logger.info(f'Archive Files: {len(sc[sc.archive == True])}')
         self.logger.info(f'remove_dest Files: {len(sc[sc.remove_dest == True])}')
 
-        print(f'Files in Cache:     {len(sc)}')
-        print(f'Skipped Files:      {len(sc[sc.skip == True])}')
-        print(f'BackUp Files:       {len(sc[sc.backup == True])}')
-        print(f'Archive Files:      {len(sc[sc.archive == True])}')
-        print(f'remove_dest Files:  {len(sc[sc.remove_dest == True])}')
+
+        info = f'Files in Cache:     {len(sc)}\n'
+        info += f'Skipped Files:      {len(sc[sc.skip == True])}\n'
+        info += f'BackUp Files:       {len(sc[sc.backup == True])}\n'
+        info += f'Archive Files:      {len(sc[sc.archive == True])}\n'
+        info += f'remove_dest Files:  {len(sc[sc.remove_dest == True])}\n'
+
+        # print(f'Files in Cache:     {len(sc)}')
+        # print(f'Skipped Files:      {len(sc[sc.skip == True])}')
+        # print(f'BackUp Files:       {len(sc[sc.backup == True])}')
+        # print(f'Archive Files:      {len(sc[sc.archive == True])}')
+        # print(f'remove_dest Files:  {len(sc[sc.remove_dest == True])}')
 
         sc = sc[ (sc['archive'] == True) | (sc['backup'] == True) | (sc['remove_dest'] == True) ]
         sc = sc[sc.skip == False]
@@ -579,6 +589,7 @@ class YABUS():
         # print(sc.dtypes)
 
         self.logger.info(f'Files to Process: {len(sc)}')
+        info += f'Files to Process:   {len(sc)}'
 
         # if len(sc[sc.backup == True]) == 0 and \
         #     len(sc[sc.archive == True]) == 0 and \
@@ -594,7 +605,24 @@ class YABUS():
             self.progress_denominator = 1
             self.progress_status = 'Done'
             self.logger.info('nothing to do ... according to the scan')
+            print(info)
+            print('Done')
+            print('')
             return 0 
+        
+        if len(sc[sc.backup == True]) == 0 \
+            and len(sc[sc.archive == True]) == 0 \
+            and len(sc[sc.remove_dest == True]) == 0:
+
+            self.progress_numerator = 1 
+            self.progress_denominator = 1
+            self.progress_status = 'Done'
+            self.logger.info('Folders are in sync')
+            print(info)
+            print('Done')
+            print('')
+            return 0 
+        
 
         # records = self.scan_cache.to_dict(orient='records')
         records = sc.to_dict(orient='records')
@@ -641,7 +669,9 @@ class YABUS():
         print( 'backup process 2/2: ', self.bar(1,1))
 
         # print( 'backup process 4/4: ', self.bar(1,1))
-        print('done')
+        print(info)
+        print('Done')
+        print('')
         
         self.logger.info('end')
         
@@ -695,8 +725,11 @@ class YABUS():
             self.clear_scan_cache()
             self.scan(index)
             # self.scan_v2(index)
+
             if len(self.scan_cache) > 0:
                 self.backup()
+            else:
+                print()
         except Exception as e:
             self.logger.error(str(e))
     

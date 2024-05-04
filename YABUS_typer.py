@@ -233,6 +233,17 @@ def remove(indexes:str):
     """
     delete_item(indexes)
 
+
+@app.command()
+def run_list(indexes:str):
+    """runs items in the list provided"""
+    indexes = [int(i) for i in indexes.split(',')]
+
+    for i in indexes:
+        run_one(i)
+
+
+
 @app.command()
 def run_all():
     """runs all enabled and runable items"""
@@ -248,6 +259,8 @@ def run_all():
 def run_one(index:int):
     """runs one item, must be enabled and runable"""
     try:
+        print()
+        print(f"running {index} | {yabus.items()[index]['source']} --> {yabus.items()[index]['dest']}")
         yabus.backup_One(index)
         process_config()
         # log_summary()
