@@ -90,5 +90,15 @@
             dest: "E:\\Apple",
             archive_dir: "E:\\Apple\\.archive\\202409141641",
         },
+        {
+            source: "\\\\192.168.1.200\\TBP-home",
+            root_dest: "D:\\",
+            ex_reg: "(.cache|GitHub|Downloads)",
+            lastbackup: null,
+            enable: true,
+            runable: true,
+            dest: "D:\\TBP-home",
+            archive_dir: "D:\\TBP-home\\.archive\\None",
+        },
     ],
 }
