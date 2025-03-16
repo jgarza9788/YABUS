@@ -3,9 +3,11 @@ import pandas as pd
 import shutil
 import json5 as json
 from utils.dataMan import DataManager
+from utils.logMan import createLogger
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
+Logger = createLogger()
 
 ## Pandas Options
 # show all the columns and rows
@@ -29,13 +31,13 @@ def prepare_files():
     os.mkdir('.\\test\\B\\A')
 
 
-    One = DataManager('.\\test\\A\\One.json')
-    Two = DataManager('.\\test\\A\\Two.json')
+    One = DataManager('.\\test\\A\\One.json',logger=Logger)
+    Two = DataManager('.\\test\\A\\Two.json',logger=Logger)
 
-    Atwo = DataManager('.\\test\\A\\A2\\Atwo.json')
+    Atwo = DataManager('.\\test\\A\\A2\\Atwo.json',logger=Logger)
 
     # these will be placed in the .archive
-    Three = DataManager('.\\test\\B\\A\\Three.json')
+    Three = DataManager('.\\test\\B\\A\\Three.json',logger=Logger)
 
     #copy two
     shutil.copy2('.\\test\\A\\Two.json','.\\test\\B\\A\\Two.json')
@@ -56,7 +58,8 @@ def run_yabus():
     data = {
         "items":[
         {
-            "source": source,"root_dest": root_dest
+            "source": source,"root_dest": root_dest,
+            "ex_reg": r"(.git|.bin|Library|\\PackageCache|ShaderCache)"
         }
         ]
     }
@@ -225,6 +228,7 @@ def scan_speed():
 
 
 if __name__ == '__main__':
+
     clean()
     prepare_files()
     run_yabus()

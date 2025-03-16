@@ -27,7 +27,7 @@ class DataManager():
             with open(self.file_dir,'r') as file:
                 return json.load(file)
         except:
-            self.logger.error('error, while loading json file')
+            self.logger.error('error, while loading json file - creating a new json file')
             self.data = self.default
             self.save()
             return self.data
