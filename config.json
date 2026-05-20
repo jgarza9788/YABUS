@@ -54,11 +54,11 @@
             source: "C:\\Users\\JGarza\\GitHub",
             root_dest: "E:\\",
             ex_reg: ".git",
-            lastbackup: "202605151350",
+            lastbackup: "202605201800",
             enable: true,
             runable: true,
             dest: "E:\\GitHub",
-            archive_dir: "E:\\GitHub\\.archive\\202605151350",
+            archive_dir: "E:\\GitHub\\.archive\\202605201800",
         },
         {
             source: "D:\\misc_programs",
